@@ -9,6 +9,7 @@
 #include <cstring>
 #include <vector>
 #include <iterator>
+#include <algorithm>
 #include <cmath>
 #include <stdint.h>
 #include <assert.h>
@@ -43,7 +44,7 @@ namespace pkr
 		std::vector<Sprite> sprites;
 	};
 
-	void pack(std::istream &input, const char *output, int padding)
+	void pack(std::istream &input, const Params &params)
 	{
 		// read all filenames from input
 
@@ -100,10 +101,10 @@ namespace pkr
 
 			imageData[i].data = sprite.data;
 
-			rects[i].width = sprite.width + padding;
-			rects[i].height = sprite.height + padding;
+			rects[i].width = sprite.width + params.padding;
+			rects[i].height = sprite.height + params.padding;
 
-			area += (sprite.width + padding) * (sprite.height + padding);
+			area += (sprite.width + params.padding) * (sprite.height + params.padding);
 		}
 
 		// find a starting size for the final image
@@ -143,7 +144,7 @@ namespace pkr
 
 			while (true)
 			{
-				rbp::MaxRectsBinPack binpack(w - padding, h - padding);
+				rbp::MaxRectsBinPack binpack(w - params.padding, h - params.padding);
 
 				if (binpack.Insert(rects, resultRects, resultIndices, modes[i]))
 				{
@@ -164,8 +165,8 @@ namespace pkr
 						Sprite &s = result->sprites[resultIndices[j]];
 
 						s = sprites[resultIndices[j]];
-						s.x = b.x + padding;
-						s.y = b.y + padding;
+						s.x = b.x + params.padding;
+						s.y = b.y + params.padding;
 						s.rotated = true;
 
 						if (a.width == b.width && a.height == b.height)
@@ -186,6 +187,22 @@ namespace pkr
 			}
 		}
 
+		// load metadata if present
+
+		Json::Value metadata;
+
+		if (params.metadata != 0)
+		{
+			Json::Reader reader;
+			std::ifstream file(params.metadata);
+
+			if (!reader.parse(file, metadata))
+			{
+				std::cout << "Metadata failed to load (" << params.metadata << ")" << std::endl;
+				std::cout << reader.getFormattedErrorMessages() << std::endl;
+			}
+		}
+
 		// generate images
 
 		const char *modeNames[] = {
@@ -202,6 +219,15 @@ namespace pkr
 			bufferSize = std::max(bufferSize, (size_t)(results[i]->width * results[i]->height * 4));
 
 		uint8_t *imageBuffer = new uint8_t[bufferSize];
+
+		std::vector<bool> bleedBufferA;
+		std::vector<bool> bleedBufferB;
+
+		if (params.bleed > 0)
+		{
+			bleedBufferA.resize(bufferSize / 4);
+			bleedBufferB.resize(bufferSize / 4);
+		}
 
 		for (size_t i = 0; i < results.size(); i++)
 		{
@@ -278,7 +304,83 @@ namespace pkr
 				}
 			}
 
-			std::string filename(output);
+			if (params.bleed > 0)
+			{
+				const int N = w * h;
+
+				for (int i = 0, j = 3; i < N; i++, j += 4)
+					bleedBufferB[i] = imageBuffer[j] != 0;
+
+				std::copy(bleedBufferB.begin(), bleedBufferB.end(), bleedBufferA.begin());
+			}
+
+			for (int k = 0; k < params.bleed; k++)
+			{
+				int offsets[][2] = {
+					{-1, -1},
+					{ 0, -1},
+					{ 1, -1},
+					{-1,  0},
+					{ 1,  0},
+					{-1,  1},
+					{ 0,  1},
+					{ 1,  1}
+				};
+
+				size_t C = 0;
+
+				for (int i = 0, j = 0, y = 0; y < h; y++)
+				{
+					for (int x = 0; x < w; x++, i += 4, j++)
+					{
+						if (!bleedBufferA[j])
+						{
+							int r = 0;
+							int g = 0;
+							int b = 0;
+							int c = 0;
+
+							for (size_t k = 0; k < countof(offsets); k++)
+							{
+								int s = offsets[k][0];
+								int t = offsets[k][1];
+
+								if (x + s > 0 && x + s < w && y + t > 0 && y + t < h)
+								{
+									int index = i + 4 * s + 4 * t * w;
+
+									if (bleedBufferA[j + s + t * w])
+									{
+										r += imageBuffer[index + 0];
+										g += imageBuffer[index + 1];
+										b += imageBuffer[index + 2];
+
+										c++;
+									}
+								}
+							}
+
+							if (c > 0)
+							{
+								imageBuffer[i + 0] = r / c;
+								imageBuffer[i + 1] = g / c;
+								imageBuffer[i + 2] = b / c;
+
+								bleedBufferB[j] = true;
+							}
+
+							C++;
+						}
+					}
+				}
+
+				if (C == 0)
+					break;
+
+				std::copy(bleedBufferB.begin(), bleedBufferB.end(), bleedBufferA.begin());
+			}
+
+			std::string filename(params.output);
 			filename += '-';
 			filename += modeNames[i];
 
@@ -299,10 +401,11 @@ namespace pkr
 				for (size_t j = 0; j < results[i]->sprites.size(); j++)
 				{
 					Sprite &sprite = results[i]->sprites[j];
+
 					Json::Value info;
 
-					Json::Reader reader;
-					reader.parse(std::string(sprite.filename) + ".json", info);
+					if (metadata.isObject() && metadata.isMember(sprite.filename))
+						info = metadata[sprite.filename];
 
 					info["w"] = sprite.width;
 					info["h"] = sprite.height;

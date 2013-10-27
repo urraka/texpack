@@ -3,5 +3,15 @@
 
 namespace pkr
 {
-	void pack(std::istream &input, const char *output, int padding = 1);
+	struct Params
+	{
+		Params() : output(0), metadata(0), padding(0), bleed(false) {}
+
+		const char *output;
+		const char *metadata;
+		int padding;
+		int bleed;
+	};
+
+	void pack(std::istream &input, const Params &params);
 }
