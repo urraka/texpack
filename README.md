@@ -9,14 +9,17 @@ Simple command line texture packer based on the MaxRects algorithm by Jukka Jyl√
 
 {file-list}:    List of PNG files separated by new-line's.
 
--o <output>:    Prefix for the output files. If it contains a directory it must exist prior to execution.
+-o <output>:    Prefix for the output files. If it contains a directory it must exist prior to
+                execution.
 
 -p <padding>:   Amount of padding between individual sprites and the image border.
 
 -m <metadata>:  Json file with data that will be included in the generated json file.
-                It must be an object where each key matches a file from {file-list} (must match exactly as passed).
+                It must be an object where each key matches a file from {file-list} (must match
+                exactly as passed).
 
--b:             Enables "alpha bleeding", which bleeds the border colors through the fully transparent pixels.
+-b:             Enables "alpha bleeding", which bleeds the border colors through the fully
+                transparent pixels.
 ```
 
 **Output:**
