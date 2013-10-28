@@ -17,7 +17,7 @@ hpp += src/bleeding.h
 hpp += src/png.h
 hpp += src/rbp/Rect.h
 hpp += src/rbp/MaxRectsBinPack.h
-src += src/json/json.h
+hpp += src/json/json.h
 
 $(out): $(src) $(hpp)
 	@mkdir -p bin
