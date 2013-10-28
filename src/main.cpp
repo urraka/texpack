@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 				case 'p': if (++i < argc) padding  = i; break;
 				case 'o': if (++i < argc) output   = i; break;
 				case 'm': if (++i < argc) metadata = i; break;
-				case 'b': if (++i < argc) bleed    = i; break;
+				case 'b': bleed = i;                    break;
 			}
 		}
 	}
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	params.output   = argv[output];
 	params.metadata = metadata != -1 ? argv[metadata]      : 0;
 	params.padding  = padding  != -1 ? atoi(argv[padding]) : 0;
-	params.bleed    = bleed    != -1 ? atoi(argv[bleed])   : 0;
+	params.bleed    = bleed != -1;
 
 	pkr::pack(std::cin, params);
 

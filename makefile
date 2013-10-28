@@ -22,3 +22,6 @@ src += src/json/json.h
 $(out): $(src) $(hpp)
 	@mkdir -p bin
 	g++ $(src) $(lib) $(opt) -o $(out)
+
+install:
+	cp $(out) /local/bin/

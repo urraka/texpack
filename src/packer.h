@@ -10,7 +10,7 @@ namespace pkr
 		const char *output;
 		const char *metadata;
 		int padding;
-		int bleed;
+		bool bleed;
 	};
 
 	void pack(std::istream &input, const Params &params);

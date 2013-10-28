@@ -295,8 +295,8 @@ namespace pkr
 				}
 			}
 
-			if (params.bleed > 0)
-				bleed_apply(imageBuffer, w, h, params.bleed);
+			if (params.bleed)
+				bleed_apply(imageBuffer, w, h);
 
 			std::string filename(params.output);
 			filename += '-';

@@ -1,19 +1,18 @@
 #include "bleeding.h"
-
+#include <cstring>
 #include <vector>
-#include <algorithm>
 
-void bleed_apply(uint8_t *image, int width, int height, int iterations)
+void bleed_apply(uint8_t *image, int width, int height)
 {
-	const int N = width * height;
+	const size_t N = width * height;
 
-	std::vector<bool> A(N);
-	std::vector<bool> B(N);
+	std::vector<int8_t> opaque(N);
+	std::vector<bool>   loose(N);
+	std::vector<size_t> pending;
+	std::vector<size_t> pendingNext;
 
-	for (int i = 0, j = 3; i < N; i++, j += 4)
-		B[i] = (image[j] != 0);
-
-	std::copy(B.begin(), B.end(), A.begin());
+	pending.reserve(N);
+	pendingNext.reserve(N);
 
 	int offsets[][2] = {
 		{-1, -1},
@@ -26,59 +25,120 @@ void bleed_apply(uint8_t *image, int width, int height, int iterations)
 		{ 1,  1}
 	};
 
-	for (int it = 0; it < iterations; it++)
+	for (size_t i = 0, j = 3; i < N; i++, j += 4)
 	{
-		size_t C = 0;
-
-		for (int i = 0, j = 0, y = 0; y < height; y++)
+		if (image[j] == 0)
 		{
-			for (int x = 0; x < width; x++, i += 4, j++)
+			bool isLoose = true;
+
+			int x = i % width;
+			int y = i / width;
+
+			for (int k = 0; k < 8; k++)
 			{
-				if (!A[j])
+				int s = offsets[k][0];
+				int t = offsets[k][1];
+
+				if (x + s > 0 && x + s < width && y + t > 0 && y + t < height)
 				{
-					int r = 0;
-					int g = 0;
-					int b = 0;
-					int c = 0;
+					size_t index = j + 4 * (s + t * width);
 
-					for (size_t k = 0; k < sizeof(offsets) / sizeof(offsets[0]); k++)
+					if (image[index + 3] != 0)
 					{
-						int s = offsets[k][0];
-						int t = offsets[k][1];
+						isLoose = false;
+						break;
+					}
+				}
+			}
 
-						if (x + s > 0 && x + s < width && y + t > 0 && y + t < height)
+			if (!isLoose)
+				pending.push_back(i);
+			else
+				loose[i] = true;
+		}
+		else
+		{
+			opaque[i] = -1;
+		}
+	}
+
+	while (pending.size() > 0)
+	{
+		pendingNext.clear();
+
+		for (size_t p = 0; p < pending.size(); p++)
+		{
+			size_t i = pending[p] * 4;
+			size_t j = pending[p];
+
+			int x = j % width;
+			int y = j / width;
+
+			int r = 0;
+			int g = 0;
+			int b = 0;
+
+			int count = 0;
+
+			for (size_t k = 0; k < 8; k++)
+			{
+				int s = offsets[k][0];
+				int t = offsets[k][1];
+
+				if (x + s > 0 && x + s < width && y + t > 0 && y + t < height)
+				{
+					t *= width;
+
+					if (opaque[j + s + t] & 1)
+					{
+						size_t index = i + 4 * (s + t);
+
+						r += image[index + 0];
+						g += image[index + 1];
+						b += image[index + 2];
+
+						count++;
+					}
+				}
+			}
+
+			if (count > 0)
+			{
+				image[i + 0] = r / count;
+				image[i + 1] = g / count;
+				image[i + 2] = b / count;
+
+				opaque[j] = 0xFE;
+
+				for (size_t k = 0; k < 8; k++)
+				{
+					int s = offsets[k][0];
+					int t = offsets[k][1];
+
+					if (x + s > 0 && x + s < width && y + t > 0 && y + t < height)
+					{
+						size_t index = j + s + t * width;
+
+						if (loose[index])
 						{
-							int index = i + 4 * s + 4 * t * width;
-
-							if (A[j + s + t * width])
-							{
-								r += image[index + 0];
-								g += image[index + 1];
-								b += image[index + 2];
-
-								c++;
-							}
+							pendingNext.push_back(index);
+							loose[index] = false;
 						}
 					}
-
-					if (c > 0)
-					{
-						image[i + 0] = r / c;
-						image[i + 1] = g / c;
-						image[i + 2] = b / c;
-
-						B[j] = true;
-					}
-
-					C++;
 				}
+			}
+			else
+			{
+				pendingNext.push_back(j);
 			}
 		}
 
-		if (C == 0)
-			break;
+		if (pendingNext.size() > 0)
+		{
+			for (size_t p = 0; p < pending.size(); p++)
+				opaque[pending[p]] >>= 1;
+		}
 
-		if (it + 1 < iterations)
-			std::copy(B.begin(), B.end(), A.begin());
+		pending.swap(pendingNext);
 	}
 }
