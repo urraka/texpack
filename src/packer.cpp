@@ -1,4 +1,5 @@
 #include "packer.h"
+#include "bleeding.h"
 #include "png.h"
 #include "rbp/MaxRectsBinPack.h"
 #include "json/json.h"
@@ -9,7 +10,6 @@
 #include <cstring>
 #include <vector>
 #include <iterator>
-#include <algorithm>
 #include <cmath>
 #include <stdint.h>
 #include <assert.h>
@@ -220,15 +220,6 @@ namespace pkr
 
 		uint8_t *imageBuffer = new uint8_t[bufferSize];
 
-		std::vector<bool> bleedBufferA;
-		std::vector<bool> bleedBufferB;
-
-		if (params.bleed > 0)
-		{
-			bleedBufferA.resize(bufferSize / 4);
-			bleedBufferB.resize(bufferSize / 4);
-		}
-
 		for (size_t i = 0; i < results.size(); i++)
 		{
 			// build & save png
@@ -305,80 +296,7 @@ namespace pkr
 			}
 
 			if (params.bleed > 0)
-			{
-				const int N = w * h;
-
-				for (int i = 0, j = 3; i < N; i++, j += 4)
-					bleedBufferB[i] = imageBuffer[j] != 0;
-
-				std::copy(bleedBufferB.begin(), bleedBufferB.end(), bleedBufferA.begin());
-			}
-
-			for (int k = 0; k < params.bleed; k++)
-			{
-				int offsets[][2] = {
-					{-1, -1},
-					{ 0, -1},
-					{ 1, -1},
-					{-1,  0},
-					{ 1,  0},
-					{-1,  1},
-					{ 0,  1},
-					{ 1,  1}
-				};
-
-				size_t C = 0;
-
-				for (int i = 0, j = 0, y = 0; y < h; y++)
-				{
-					for (int x = 0; x < w; x++, i += 4, j++)
-					{
-						if (!bleedBufferA[j])
-						{
-							int r = 0;
-							int g = 0;
-							int b = 0;
-							int c = 0;
-
-							for (size_t k = 0; k < countof(offsets); k++)
-							{
-								int s = offsets[k][0];
-								int t = offsets[k][1];
-
-								if (x + s > 0 && x + s < w && y + t > 0 && y + t < h)
-								{
-									int index = i + 4 * s + 4 * t * w;
-
-									if (bleedBufferA[j + s + t * w])
-									{
-										r += imageBuffer[index + 0];
-										g += imageBuffer[index + 1];
-										b += imageBuffer[index + 2];
-
-										c++;
-									}
-								}
-							}
-
-							if (c > 0)
-							{
-								imageBuffer[i + 0] = r / c;
-								imageBuffer[i + 1] = g / c;
-								imageBuffer[i + 2] = b / c;
-
-								bleedBufferB[j] = true;
-							}
-
-							C++;
-						}
-					}
-				}
-
-				if (C == 0)
-					break;
-
-				std::copy(bleedBufferB.begin(), bleedBufferB.end(), bleedBufferA.begin());
-			}
+				bleed_apply(imageBuffer, w, h, params.bleed);
 
 			std::string filename(params.output);
 			filename += '-';
