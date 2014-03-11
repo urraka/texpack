@@ -39,7 +39,7 @@ void bleed_apply(uint8_t *image, int width, int height)
 				int s = offsets[k][0];
 				int t = offsets[k][1];
 
-				if (x + s > 0 && x + s < width && y + t > 0 && y + t < height)
+				if (x + s >= 0 && x + s < width && y + t >= 0 && y + t < height)
 				{
 					size_t index = j + 4 * (s + t * width);
 
@@ -85,7 +85,7 @@ void bleed_apply(uint8_t *image, int width, int height)
 				int s = offsets[k][0];
 				int t = offsets[k][1];
 
-				if (x + s > 0 && x + s < width && y + t > 0 && y + t < height)
+				if (x + s >= 0 && x + s < width && y + t >= 0 && y + t < height)
 				{
 					t *= width;
 
@@ -115,7 +115,7 @@ void bleed_apply(uint8_t *image, int width, int height)
 					int s = offsets[k][0];
 					int t = offsets[k][1];
 
-					if (x + s > 0 && x + s < width && y + t > 0 && y + t < height)
+					if (x + s >= 0 && x + s < width && y + t >= 0 && y + t < height)
 					{
 						size_t index = j + s + t * width;
 
