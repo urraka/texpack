@@ -56,4 +56,4 @@ find . -name "*.png" | texpack.exe -o out/atlas
 
 **Building:**
 
-Adapt makefile as needed. External dependencies are `libpng` and `libz`. It also depends on `jsoncpp` and code from `RectangleBinPack` but that's embedded in the source.
+Adapt makefile as needed. External dependencies are `libpng` and `zlib`. It also depends on `jsoncpp` and code from `RectangleBinPack` but that's embedded in the source.
