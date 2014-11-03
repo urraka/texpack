@@ -1,6 +1,6 @@
 #include "packer.h"
 #include "bleeding.h"
-#include "png.h"
+#include "png/png.h"
 #include "rbp/MaxRectsBinPack.h"
 #include "json/json.h"
 
