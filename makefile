@@ -1,6 +1,6 @@
 out := bin/texpack.exe
 
-lib := -lpng -lz
+lib := -Isrc -lpng -lz
 opt := -O3 -Wall -fno-exceptions -fno-rtti -static-libgcc -static-libstdc++
 cxx := g++
 
