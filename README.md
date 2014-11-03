@@ -50,7 +50,8 @@ The generated json file will have the following format:
 
 This will take all PNG's in the current directory and generate the texture atlas in the out/ directory.
 ```
-find *.png | texpack -o out/atlas -p 16 -m metadata.json -b
+mkdir -p out
+find . -name "*.png" | texpack.exe -o out/atlas
 ```
 
 **Building:**
