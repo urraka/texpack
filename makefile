@@ -1,8 +1,11 @@
-out := bin/texpack.exe
+out := bin/texpack
 
-lib := -Isrc -lpng -lz
-opt := -O3 -Wall -fno-exceptions -fno-rtti -static-libgcc -static-libstdc++
-cxx := g++
+ifeq ($(shell uname | grep 'MINGW32_NT' -c),1)
+  out := bin/texpack.exe
+endif
+
+libs := -lpng -lz
+inc := -Isrc
 
 src += src/main.cpp
 src += src/packer.cpp
@@ -21,7 +24,4 @@ hpp += src/json/json.h
 
 $(out): $(src) $(hpp)
 	@mkdir -p bin
-	g++ $(src) $(lib) $(opt) -o $(out)
-
-install:
-	cp $(out) /local/bin/
+	$(CXX) $(src) $(inc) $(CFLAGS) $(LDFLAGS) $(libs) -o $(out)
