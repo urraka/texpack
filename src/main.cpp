@@ -1,4 +1,5 @@
 #include "packer.h"
+#include "help.h"
 
 #include <cstdio>
 #include <iostream>
@@ -7,7 +8,7 @@
 
 void print_help()
 {
-	puts("No help available");
+	puts(help_text);
 }
 
 int main(int argc, char *argv[])
