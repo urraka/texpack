@@ -1,47 +1,105 @@
 #include "packer.h"
 
+#include <cstdio>
 #include <iostream>
-#include <cstring>
-#include <cstdlib>
+#include <fstream>
+#include <getopt.h>
+
+void print_help()
+{
+	puts("No help available");
+}
 
 int main(int argc, char *argv[])
 {
-	int output   = -1;
-	int padding  = -1;
-	int metadata = -1;
-	int bleed    = -1;
+	pkr::Params params;
 
-	for (int i = 1; i < argc; i++)
+	struct option long_options[] = {
+		{"help",           no_argument,       0, 'h'},
+		{"alpha-bleeding", no_argument,       0, 'b'},
+		{"POT",            no_argument,       0, 'P'},
+		{"allow-flip",     no_argument,       0, 'f'},
+		{"pretty",         no_argument,       0, 'e'},
+		{"indentation",    required_argument, 0, 'i'},
+		{"output",         required_argument, 0, 'o'},
+		{"metadata",       required_argument, 0, 'm'},
+		{"padding",        required_argument, 0, 'p'},
+		{"size",           required_argument, 0, 's'},
+		{"max-size",       required_argument, 0, 'S'},
+		{"mode",           required_argument, 0, 'M'},
+		{0, 0, 0, 0}
+	};
+
+	while (true)
 	{
-		if (argv[i][0] == '-' && strlen(argv[i]) == 2)
+		int option_index = 0;
+		int code = getopt_long(argc, argv, "hbPfei:o:m:p:s:S:M:", long_options, &option_index);
+
+		if (code == -1)
+			break;
+
+		switch (code)
 		{
-			switch (argv[i][1])
-			{
-				case 'p': if (++i < argc) padding  = i; break;
-				case 'o': if (++i < argc) output   = i; break;
-				case 'm': if (++i < argc) metadata = i; break;
-				case 'b': bleed = i;                    break;
-			}
+			case 'h':
+				print_help();
+				return 0;
+
+			case 'b': params.bleed = true;         break;
+			case 'P': params.pot = true;           break;
+			case 'f': params.rotate = true;        break;
+			case 'e': params.pretty = true;        break;
+			case 'o': params.output = optarg;      break;
+			case 'm': params.metadata = optarg;    break;
+			case 'M': params.mode = optarg;        break;
+			case 'i': params.indentation = optarg; break;
+
+			case 'p':
+				if (sscanf(optarg, "%d", &params.padding) != 1)
+				{
+					fputs("Invalid value for padding.\n", stderr);
+					return 1;
+				}
+				break;
+
+			case 's':
+				if (sscanf(optarg, "%dx%d", &params.width, &params.height) != 2)
+				{
+					fputs("Invalid format for --size parameter.\n", stderr);
+					return 1;
+				}
+				break;
+
+			case 'S':
+				if (sscanf(optarg, "%dx%d", &params.max_width, &params.max_height) != 2)
+				{
+					fputs("Invalid format for --max-size parameter.\n", stderr);
+					return 1;
+				}
+				break;
+
+
+			case 0:
+			case '?':
+			default:
+				return 1;
 		}
 	}
 
-	if (output == -1)
-	{
-		std::cout << "Usage: {file-list} | texpack -o <output> " <<
-			"[-p <padding>] [-m <metadata>] [-b]" <<
-			std::endl;
+	std::istream *input = &std::cin;
+	std::ifstream file;
 
-		return 0;
+	if (optind < argc)
+	{
+		file.open(argv[optind]);
+
+		if (!file.is_open())
+		{
+			fprintf(stderr, "Error reading file %s\n", argv[optind]);
+			return 1;
+		}
+
+		input = &file;
 	}
 
-	pkr::Params params;
-
-	params.output   = argv[output];
-	params.metadata = metadata != -1 ? argv[metadata]      : 0;
-	params.padding  = padding  != -1 ? atoi(argv[padding]) : 0;
-	params.bleed    = bleed != -1;
-
-	pkr::pack(std::cin, params);
-
-	return 0;
+	return pkr::pack(*input, params);
 }

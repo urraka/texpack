@@ -3,8 +3,72 @@
 #include <string.h>
 #include <setjmp.h>
 #include <png.h>
+#include "png.h"
 
 namespace png {
+
+bool info(const char *path, int *width, int *height)
+{
+	FILE *file = fopen(path, "rb");
+
+	if (!file)
+		return false;
+
+	size_t headerSize = 8;
+	uint8_t header[8];
+	headerSize = fread(header, 1, headerSize, file);
+
+	if (png_sig_cmp(header, 0, headerSize))
+	{
+		fclose(file);
+		return false;
+	}
+
+	png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+	if (!png)
+	{
+		fclose(file);
+		return false;
+	}
+
+	png_infop info = png_create_info_struct(png);
+
+	if (!info)
+	{
+		png_destroy_read_struct(&png, NULL, NULL);
+		fclose(file);
+		return false;
+	}
+
+	png_infop info_end = png_create_info_struct(png);
+
+	if (!info_end)
+	{
+		png_destroy_read_struct(&png, &info, NULL);
+		fclose(file);
+		return false;
+	}
+
+	if (setjmp(png_jmpbuf(png)))
+	{
+		png_destroy_read_struct(&png, &info, &info_end);
+		fclose(file);
+		return false;
+	}
+
+	png_init_io(png, file);
+	png_set_sig_bytes(png, headerSize);
+	png_read_info(png, info);
+
+	*width = png_get_image_width(png, info);
+	*height = png_get_image_height(png, info);
+
+	png_destroy_read_struct(&png, &info, &info_end);
+	fclose(file);
+
+	return (*width > 0 && *height > 0);
+}
 
 uint8_t *load(const char *path, int *width, int *height, int *channels)
 {

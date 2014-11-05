@@ -1,3 +1,5 @@
 *.sublime-project
 *.sublime-workspace
 bin/
+test/input/
+test/output/
