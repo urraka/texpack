@@ -13,8 +13,15 @@
 #include <cmath>
 #include <cstdio>
 #include <stdint.h>
+#include <libgen.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
+
+#ifdef _WIN32
+#define mkdir(a,b) mkdir(a)
+#endif
 
 namespace pkr
 {
@@ -660,12 +667,45 @@ namespace pkr
 		}
 	};
 
+	struct c_string
+	{
+		char *buffer;
+		c_string(const char *str) : buffer(new char[strlen(str) + 1]) { strcpy(buffer, str); }
+		~c_string() { delete[] buffer; }
+		operator char*&() { return buffer; }
+	};
+
+	static bool is_dir(const char *path)
+	{
+		struct stat sb;
+		return stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
+	}
+
+	static bool create_dir(const char *path)
+	{
+		if (!is_dir(path))
+		{
+			if (create_dir(dirname(c_string(path))))
+				mkdir(path, S_IRWXU);
+
+			return is_dir(path);
+		}
+
+		return true;
+	}
+
 	int pack(std::istream &input, const Params &params)
 	{
 		Packer packer(params);
 
 		if (!packer.validate_params())
 			return 1;
+
+		if (!create_dir(dirname(c_string(params.output))))
+		{
+			fputs("Failed to create directory.", stderr);
+			return 1;
+		}
 
 		packer.load_file_list(input);
 
