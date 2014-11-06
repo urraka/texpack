@@ -703,7 +703,7 @@ namespace pkr
 
 		if (!create_dir(dirname(c_string(params.output))))
 		{
-			fputs("Failed to create directory.", stderr);
+			fputs("Failed to create directory.\n", stderr);
 			return 1;
 		}
 
