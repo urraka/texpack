@@ -71,11 +71,8 @@ Note: in case that --allow-flip is used, the (tl,br) coordinates of each sprite 
 
 This will take all PNG's in the current directory and generate the texture atlas in the out/ directory.
 ```
-mkdir -p out
 find . -name "*.png" | texpack -o out/atlas
 ```
-
-The packer won't create any directories, so make sure they already exist before running it if needed.
 
 **Building:**
 
