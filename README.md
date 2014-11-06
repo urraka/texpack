@@ -4,47 +4,68 @@ Simple command line texture packer based on the MaxRects algorithm by Jukka Jyl√
 
 **Usage:**
 ```
-{file-list} | texpack -o <output> [-p <padding>] [-m <metadata>] [-b]
+Usage: texpack -o <output-files-prefix> [options...] [<input-file>]
 
+The <input-file> should contain a list of image files (png) separated by new
+lines. If no <input-file> is given, it will read from stdin.
 
-{file-list}:    List of PNG files separated by new-line's.
+Options:
 
--o <output>:    Prefix for the output files. If it contains a directory it must exist prior to
-                execution.
+-h, --help            Show this help.
+-o, --output          Prefix for the generated files (atlas and json).
+-p, --padding         Padding between sprites.
+-s, --size            Fixed size for the atlas image (i.e. 512x512).
+-S, --max-size        Max size for the atlas image (ignored if size is used).
+-P, --POT             Keep atlas size a power of two (ignored if size is used).
+-f, --allow-flip      Allows sprites to be flipped/rotated for better packing.
+-m, --metadata        Input metadata file in json format. (*)
+-e, --pretty          Generated json file will be human readable.
+-i, --indentation     String for json indentation. Used along with --pretty.
+-b, --alpha-bleeding  Post-process atlas image with an alpha bleeding algorithm.
+-M, --mode            Specifies the packing heuristic. Allowed values are:
+                        * auto (default; tries all modes and selects one)
+                        * bottom-left
+                        * short-side
+                        * long-side
+                        * best-area
+                        * contact-point
 
--p <padding>:   Amount of padding between individual sprites and the image border.
+(*) The format of the metadata file should be as follows:
 
--m <metadata>:  Json file with data that will be included in the generated json file.
-                It must be an object where each key matches a file from {file-list} (must match
-                exactly as passed).
+    {
+      "someimage.png":    {"param1": "some-value", "param2": 0, ...},
+      "anotherimage.png": {"param1": "some-value", "param2": 0, ...},
+      ...
+    }
 
--b:             Enables "alpha bleeding", which bleeds the border colors through the fully
-                transparent pixels.
+    Each file name should match one in the <input-file> list.
 ```
 
 **Output:**
 
-There will be 5 images generated that correspond to the different methods of the MaxRects algorithm (BestShortSideFit, BestLongSideFit, BestAreaFit, BottomLeftRule, ContactPointRule).
-
-The generated image will have a power of 2 size.
-
-The sprites might get rotated. In that case the `tl` coordinate (top-left) will correspond to the top-right of the sprite as it appears in the resulting image.
+At least one image (the texture atlas) and its corresponding json file will be generated. If the sprites don't fit in the atlas (when using --size or --max-size), a set of images with its json file will be generated.
 
 The generated json file will have the following format:
 
 ```
 {
-	"image1.png": {
-    	"w": <width of the original image>,
-        "h": <height of the original image>,
-        "tl": {"x": <top-left-x>,     "y": <top-left-y>},
-        "br": {"x": <bottom-right-x>, "y": <bottom-right-y>},
-        ... metadata ...
-    },
-    "image2.png": { ... },
-    ...
+    "width": <atlas width>,
+    "height": <atlas height>,
+    "sprites": [
+        "image1.png": {
+            "w": <width of the original image>,
+            "h": <height of the original image>,
+            "tl": {"x": <top-left-x>,     "y": <top-left-y>},
+            "br": {"x": <bottom-right-x>, "y": <bottom-right-y>},
+            ... (metadata values if given)
+        },
+        "image2.png": { ... },
+        ...
+    ]
 }
 ```
+
+Note: in case that --allow-flip is used, the (tl,br) coordinates of each sprite get flipped along with the image. You can use this fact to detect if a sprite is flipped or not.
 
 **Example:**
 
@@ -54,6 +75,8 @@ mkdir -p out
 find . -name "*.png" | texpack -o out/atlas
 ```
 
+The packer won't create any directories, so make sure they already exist before running it if needed.
+
 **Building:**
 
-Adapt makefile as needed. External dependencies are `libpng` and `zlib`. It also depends on `jsoncpp` and code from `RectangleBinPack` but that's embedded in the source.
+Adapt makefile if needed. External dependencies are `libpng` and `zlib`. It also depends on `jsoncpp` and code from `RectangleBinPack` but that's embedded in the source.
