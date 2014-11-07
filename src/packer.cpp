@@ -2,10 +2,13 @@
 #include "bleeding.h"
 #include "png/png.h"
 #include "rbp/MaxRects.h"
-#include "json/json.h"
+
+#include "rapidjson/document.h"
+#include "rapidjson/filereadstream.h"
+#include "rapidjson/filewritestream.h"
+#include "rapidjson/prettywriter.h"
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <cstring>
 #include <vector>
@@ -52,7 +55,7 @@ namespace pkr
 		std::vector<Sprite> input_sprites;
 		std::vector<rbp::RectSize> input_rects;
 
-		Json::Value metadata;
+		rapidjson::Document metadata;
 
 		Packer(const Params &params) : params(params) {}
 
@@ -80,33 +83,33 @@ namespace pkr
 		{
 			if (params.output == 0)
 			{
-				fprintf(stderr, "The argument --output is required.\n");
+				fputs("The argument --output is required.\n", stderr);
 				return false;
 			}
 
 			if (params.padding < 0)
 			{
-				fprintf(stderr, "Invalid padding.\n");
+				fputs("Invalid padding.\n", stderr);
 				return false;
 			}
 
 			if ((params.width > 0 || params.height > 0) &&
 				(params.width <= 0 || params.height <= 0))
 			{
-				fprintf(stderr, "Invalid size.\n");
+				fputs("Invalid size.\n", stderr);
 				return false;
 			}
 
 			if ((params.max_width > 0 || params.max_height > 0) &&
 				(params.max_width <= 0 || params.max_height <= 0))
 			{
-				fprintf(stderr, "Invalid max size.\n");
+				fputs("Invalid max size.\n", stderr);
 				return false;
 			}
 
 			if (pack_mode(params.mode) == -1)
 			{
-				fprintf(stderr, "Invalid packing mode.\n");
+				fputs("Invalid packing mode.\n", stderr);
 				return false;
 			}
 
@@ -120,6 +123,12 @@ namespace pkr
 
 				params.max_width = w >> 1;
 				params.max_height = h >> 1;
+			}
+
+			if (params.indentation < 0)
+			{
+				fputs("Invalid indentation. Using default.\n", stderr);
+				params.indentation = 0;
 			}
 
 			return true;
@@ -442,11 +451,26 @@ namespace pkr
 		{
 			if (params.metadata != 0)
 			{
-				Json::Reader reader;
-				std::ifstream file(params.metadata);
+				FILE *file = fopen(params.metadata, "rb");
 
-				if (!reader.parse(file, metadata))
-					fprintf(stderr, "Failed to load/parse metadata file.\n");
+				if (file == 0)
+				{
+					fprintf(stderr, "Failed to load metadata file (%s).\n", params.metadata);
+					return;
+				}
+
+				using namespace rapidjson;
+
+				char buffer[4096];
+				FileReadStream stream(file, buffer, sizeof(buffer));
+				metadata.ParseStream(stream);
+				fclose(file);
+
+				if (metadata.HasParseError() || !metadata.IsObject())
+				{
+					fputs("Invalid metadata file.\n", stderr);
+					metadata.SetNull();
+				}
 			}
 		}
 
@@ -459,7 +483,7 @@ namespace pkr
 			{
 				filename = params.output;
 
-				if (results.size() > 0)
+				if (results.size() > 1)
 				{
 					sprintf(buf, "-%d.png", (int)i);
 					filename += buf;
@@ -592,7 +616,7 @@ namespace pkr
 			{
 				filename = params.output;
 
-				if (results.size() > 0)
+				if (results.size() > 1)
 				{
 					sprintf(buf, "-%d.json", (int)i);
 					filename += buf;
@@ -608,62 +632,105 @@ namespace pkr
 
 		void create_json_file(const char *filename, const Result &result)
 		{
-			std::ofstream json(filename, std::ofstream::trunc);
+			FILE *file = fopen(filename, "wb");
 
-			if (!json.is_open())
+			if (file == 0)
 			{
 				fprintf(stderr, "Error creating file %s\n", filename);
 				return;
 			}
 
-			Json::Value root(Json::objectValue);
+			using namespace rapidjson;
 
-			root["width"] = result.width;
-			root["height"] = result.height;
-			root["sprites"] = Json::Value(Json::objectValue);
+			char buffer[4096];
+			FileWriteStream stream(file, buffer, sizeof(buffer));
+
+			if (params.pretty)
+			{
+				PrettyWriter<FileWriteStream> writer(stream);
+
+				if (params.indentation > 0)
+					writer.SetIndent(' ', params.indentation);
+				else
+					writer.SetIndent('\t', 1);
+
+				write_json(result, writer);
+			}
+			else
+			{
+				Writer<FileWriteStream> writer(stream);
+				write_json(result, writer);
+			}
+
+			fclose(file);
+		}
+
+		template<typename T>
+		void write_json(const Result &result, T &writer)
+		{
+			writer.StartObject();
+
+			writer.String("width");
+			writer.Int(result.width);
+
+			writer.String("height");
+			writer.Int(result.height);
+
+			writer.String("sprites");
+			writer.StartObject();
 
 			for (size_t i = 0; i < result.sprites.size(); i++)
 			{
 				const Sprite &sprite = result.sprites[i];
 
-				Json::Value info;
+				writer.String(sprite.filename);
+				writer.StartObject();
 
-				if (metadata.isObject() && metadata.isMember(sprite.filename))
-					info = metadata[sprite.filename];
+				writer.String("x");
+				writer.Int(sprite.x);
 
-				info["w"] = sprite.width;
-				info["h"] = sprite.height;
-				info["tl"] = Json::Value(Json::objectValue);
-				info["br"] = Json::Value(Json::objectValue);
+				writer.String("y");
+				writer.Int(sprite.y);
 
 				if (sprite.rotated)
 				{
-					info["tl"]["x"] = sprite.x + sprite.height;
-					info["tl"]["y"] = sprite.y;
-					info["br"]["x"] = sprite.x;
-					info["br"]["y"] = sprite.y + sprite.width;
+					writer.String("width");
+					writer.Int(sprite.height);
+
+					writer.String("height");
+					writer.Int(sprite.width);
 				}
 				else
 				{
-					info["tl"]["x"] = sprite.x;
-					info["tl"]["y"] = sprite.y;
-					info["br"]["x"] = sprite.x + sprite.width;
-					info["br"]["y"] = sprite.y + sprite.height;
+					writer.String("width");
+					writer.Int(sprite.width);
+
+					writer.String("height");
+					writer.Int(sprite.height);
 				}
 
-				root["sprites"][sprite.filename] = info;
+				if (params.rotate)
+				{
+					writer.String("rotated");
+					writer.Bool(sprite.rotated);
+				}
+
+				if (metadata.IsObject())
+				{
+					rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
+
+					if (it != metadata.MemberEnd())
+					{
+						writer.String("meta");
+						it->value.Accept(writer);
+					}
+				}
+
+				writer.EndObject();
 			}
 
-			if (params.pretty)
-			{
-				Json::StyledStreamWriter writer(params.indentation);
-				writer.write(json, root);
-			}
-			else
-			{
-				Json::FastWriter writer;
-				json << writer.write(root);
-			}
+			writer.EndObject();
+			writer.EndObject();
 		}
 	};
 
@@ -712,11 +779,11 @@ namespace pkr
 		if (!packer.load_sprites_info())
 			return 1;
 
-		packer.load_metadata();
-
 		std::vector<Result*> results = packer.compute_results();
 
 		packer.create_png_files(results);
+
+		packer.load_metadata();
 		packer.create_json_files(results);
 
 		for (size_t i = 0; i < results.size(); i++)

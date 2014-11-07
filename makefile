@@ -1,6 +1,5 @@
 libs := -lpng -lz
-inc := -Isrc
-flags := -g -Wall -std=c++11
+flags := -g -O2 -Wall -std=c++11
 
 out := bin/texpack
 
@@ -14,14 +13,12 @@ src += src/packer.cpp
 src += src/bleeding.cpp
 src += src/png/png.cpp
 src += src/rbp/MaxRects.cpp
-src += src/json/json.cpp
 
 hpp += src/help.h
 hpp += src/packer.h
 hpp += src/bleeding.h
 hpp += src/png/png.h
 hpp += src/rbp/MaxRects.h
-hpp += src/json/json.h
 
 $(out): $(src) $(hpp)
 	@mkdir -p bin

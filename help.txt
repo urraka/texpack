@@ -11,10 +11,10 @@ Options:
 -s, --size            Fixed size for the atlas image (i.e. 512x512).
 -S, --max-size        Max size for the atlas image (ignored if size is used).
 -P, --POT             Keep atlas size a power of two (ignored if size is used).
--f, --allow-flip      Allows sprites to be flipped/rotated for better packing.
+-r, --allow-rotate    Allows sprites to be rotated for better packing.
 -m, --metadata        Input metadata file in json format. (*)
 -e, --pretty          Generated json file will be human readable.
--i, --indentation     String for json indentation. Used along with --pretty.
+-i, --indentation     Number of spaces for indentation, 0 to use tabs (default).
 -b, --alpha-bleeding  Post-process atlas image with an alpha bleeding algorithm.
 -M, --mode            Specifies the packing heuristic. Allowed values are:
                         * auto (default; tries all modes and selects one)
@@ -28,7 +28,7 @@ Options:
 
     {
       "someimage.png":    {"param1": "some-value", "param2": 0, ...},
-      "anotherimage.png": {"param1": "some-value", "param2": 0, ...},
+      "anotherimage.png": "not necessarily an object",
       ...
     }
 

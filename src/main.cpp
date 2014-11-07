@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 		{"help",           no_argument,       0, 'h'},
 		{"alpha-bleeding", no_argument,       0, 'b'},
 		{"POT",            no_argument,       0, 'P'},
-		{"allow-flip",     no_argument,       0, 'f'},
+		{"allow-rotate",   no_argument,       0, 'r'},
 		{"pretty",         no_argument,       0, 'e'},
 		{"indentation",    required_argument, 0, 'i'},
 		{"output",         required_argument, 0, 'o'},
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	while (true)
 	{
 		int option_index = 0;
-		int code = getopt_long(argc, argv, "hbPfei:o:m:p:s:S:M:", long_options, &option_index);
+		int code = getopt_long(argc, argv, "hbPrei:o:m:p:s:S:M:", long_options, &option_index);
 
 		if (code == -1)
 			break;
@@ -47,12 +47,19 @@ int main(int argc, char *argv[])
 
 			case 'b': params.bleed = true;         break;
 			case 'P': params.pot = true;           break;
-			case 'f': params.rotate = true;        break;
+			case 'r': params.rotate = true;        break;
 			case 'e': params.pretty = true;        break;
 			case 'o': params.output = optarg;      break;
 			case 'm': params.metadata = optarg;    break;
 			case 'M': params.mode = optarg;        break;
-			case 'i': params.indentation = optarg; break;
+
+			case 'i':
+				if (sscanf(optarg, "%d", &params.indentation) != 1)
+				{
+					fputs("Invalid value for indentation.\n", stderr);
+					return 1;
+				}
+				break;
 
 			case 'p':
 				if (sscanf(optarg, "%d", &params.padding) != 1)

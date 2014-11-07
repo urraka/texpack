@@ -9,11 +9,11 @@ namespace pkr
 			output(0),
 			metadata(0),
 			mode("auto"),
-			indentation("\t"),
 			bleed(false),
 			pot(false),
 			rotate(false),
 			pretty(false),
+			indentation(0),
 			padding(0),
 			width(0),
 			height(0),
@@ -24,11 +24,11 @@ namespace pkr
 		const char *output;
 		const char *metadata;
 		const char *mode;
-		const char *indentation;
 		bool bleed;
 		bool pot;
 		bool rotate;
 		bool pretty;
+		int indentation;
 		int padding;
 		int width;
 		int height;
