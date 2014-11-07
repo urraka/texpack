@@ -60,8 +60,8 @@ The generated json file will have a format like this:
             "width": 60,       // size of sprite rect in atlas
             "height": 100,
 
-            "rotated": true,   // whether sprite is rotated (clockwise)
-                               // available if used --allow-flip
+            "rotated": true,   // whether sprite is rotated or not (clockwise)
+                               // available if used --allow-rotate
 
             "meta": ...        // sprite metadata; available if --metadata
                                // is given and it has data for the sprite
