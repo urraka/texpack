@@ -1,6 +1,6 @@
 ### **texpack**
 
-Simple command line texture packer based on the MaxRects algorithm by Jukka Jylänki (https://github.com/juj/RectangleBinPack).
+Simple cross-platform command line texture packer based on the MaxRects packing algorithm by Jukka Jylänki (https://github.com/juj/RectangleBinPack).
 
 **Usage:**
 ```
@@ -80,4 +80,71 @@ find . -name "*.png" | texpack -o out/atlas
 
 **Building:**
 
-Adapt makefile if needed. External dependencies are `libpng` and `zlib`. It also depends on `rapidjson` and code from `RectangleBinPack` but that stuff is embedded in the source.
+Building has been tested on Linux, OSX and Windows (with MSYS/mingw-w64). Visual Studio is not supported.
+
+In order to build, you will need to make sure that `libpng` and `zlib` are installed on your system. On Linux, you can use your system package manager to install these libraries. For example:
+
+```
+# Arch Linux
+sudo pacman -S libpng
+
+# Ubuntu
+sudo apt-get install libpng12-dev
+```
+
+`zlib` is a `libpng` dependency so it should be installed along with it.
+
+Once you have that just run `make` on the texpack project directory. If the libraries aren't installed on the default compiler paths, you can use `CFLAGS` and `LDFLAGS` to give it the required paths. For example, if the libraries were located inside `~/libs`:
+
+`CFLAGS=-I~/libs/include; LDFLAGS=-L~/libs/lib; make`
+
+The resulting binary file will be inside the `bin/` directory.
+
+If you don't have a package manager you may have to download and compile both `zlib` and `libpng` yourself. Here's an example of how you could do this (do not just copy paste this):
+
+```
+# go to project directory
+cd texpack
+
+# create a directory for the libraries and move in there
+mkdir ext
+cd ext
+
+# download required files
+curl -L -O http://prdownloads.sourceforge.net/libpng/libpng-1.6.14.tar.gz?download
+curl -L -O http://zlib.net/zlib-1.2.8.tar.gz
+
+# extract them
+tar xf libpng*
+tar xf zlib*
+
+# compile and install zlib
+cd zlib*
+./configure --prefix=`pwd`/..
+make
+make install
+cd ..
+
+# note: that won't work on MSYS (windows). you can do this instead:
+cd zlib*
+export BINARY_PATH="`pwd`/../bin"
+export INCLUDE_PATH="`pwd`/../include"
+export LIBRARY_PATH="`pwd`/../lib"
+make -f win32/Makefile.gcc
+make -f win32/Makefile.gcc install
+cd ..
+
+# compile and install libpng
+cd libpng*
+./configure --prefix=`pwd`/.. --with-zlib-prefix=`pwd`/..
+make
+make install
+cd ..
+
+# get back to the texpack directory and compile it
+cd ..
+export CFLAGS=-I`pwd`/ext/include
+export LDFLAGS=-L`pwd`/ext/lib
+make
+
+```
