@@ -3,6 +3,7 @@
 Simple cross-platform command line texture packer based on the MaxRects packing algorithm by Jukka Jylänki (https://github.com/juj/RectangleBinPack).
 
 **Usage:**
+
 ```
 Usage: texpack -o <output-files-prefix> [options...] [<input-file>]
 
@@ -47,7 +48,7 @@ At least one image (the texture atlas) and its corresponding json file will be g
 
 The generated json file will have a format like this:
 
-```
+```javascript
 {
     "width": 512,              // texture atlas width
     "height": 512,             // texture atlas height
@@ -63,10 +64,10 @@ The generated json file will have a format like this:
             "rotated": true,   // whether sprite is rotated or not (clockwise)
                                // available if used --allow-rotate
 
-            "meta": ...        // sprite metadata; available if --metadata
+            "meta": /*...*/    // sprite metadata; available if --metadata
                                // is given and it has data for the sprite
         },
-        ...
+        //...
     }
 }
 ```
@@ -74,7 +75,8 @@ The generated json file will have a format like this:
 **Example:**
 
 This will take all PNG's in the current directory and generate the texture atlas in the out/ directory.
-```
+
+```bash
 find . -name "*.png" | texpack -o out/atlas
 ```
 
@@ -84,7 +86,7 @@ Building has been tested on Linux, OSX and Windows (with MSYS/mingw-w64). Visual
 
 In order to build, you will need to make sure that `libpng` and `zlib` are installed on your system. On Linux, you can use your system package manager to install these libraries. For example:
 
-```
+```bash
 # Arch Linux
 sudo pacman -S libpng
 
@@ -96,13 +98,17 @@ sudo apt-get install libpng12-dev
 
 Once you have that just run `make` on the texpack project directory. If the libraries aren't installed on the default compiler paths, you can use `CFLAGS` and `LDFLAGS` to give it the required paths. For example, if the libraries were located inside `~/libs`:
 
-`CFLAGS=-I~/libs/include; LDFLAGS=-L~/libs/lib; make`
+```bash
+export CFLAGS=-I~/libs/include
+export LDFLAGS=-L~/libs/lib
+make
+```
 
 The resulting binary file will be inside the `bin/` directory.
 
 If you don't have a package manager you may have to download and compile both `zlib` and `libpng` yourself. Here's an example of how you could do this (do not just copy paste this):
 
-```
+```bash
 # go to project directory
 cd texpack
 
@@ -146,5 +152,4 @@ cd ..
 export CFLAGS=-I`pwd`/ext/include
 export LDFLAGS=-L`pwd`/ext/lib
 make
-
 ```
