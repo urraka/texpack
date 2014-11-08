@@ -1,11 +1,10 @@
 libs := -lpng -lz
 flags := -g -O2 -Wall -std=c++11
-
 out := bin/texpack
 
 ifeq ($(shell uname | grep 'MINGW32_NT' -c),1)
   out := bin/texpack.exe
-  flags += -Wall -static-libgcc -static-libstdc++
+  flags += -static-libgcc -static-libstdc++
 endif
 
 src += src/main.cpp

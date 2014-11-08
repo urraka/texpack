@@ -1,5 +1,6 @@
 #include <limits>
 #include <cmath>
+#include <cstdlib>
 
 #include "MaxRects.h"
 
