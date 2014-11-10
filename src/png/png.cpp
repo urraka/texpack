@@ -122,7 +122,8 @@ uint8_t *load(const char *path, int *width, int *height, int *channels)
 
 	png_init_io(png, file);
 	png_set_sig_bytes(png, headerSize);
-	png_read_png(png, info, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
+	png_read_png(png, info, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING |
+		PNG_TRANSFORM_EXPAND | PNG_TRANSFORM_GRAY_TO_RGB, NULL);
 
 	int color = png_get_color_type(png, info);
 	*width = png_get_image_width(png, info);
