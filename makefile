@@ -5,6 +5,7 @@ out := bin/texpack
 ifeq ($(shell uname | grep 'MINGW32_NT' -c),1)
   out := bin/texpack.exe
   flags += -static-libgcc -static-libstdc++
+  win32 := yes
 endif
 
 src += src/main.cpp
@@ -32,6 +33,9 @@ src/help.h: help.txt
 		sed -e 's/^/\t"/g'   | \
 		sed -e 's/$$/\\n"/g' >> src/help.h
 	echo '	"";' >> src/help.h
+ifeq ($(win32),yes)
+	sed -i 's/$$/\r/' src/help.h
+endif
 
 clean:
 	rm -rf bin

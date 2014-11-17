@@ -22,6 +22,7 @@ Options:
 -m, --metadata        Input metadata file in json format. (*)
 -e, --pretty          Generated json file will be human readable.
 -i, --indentation     Number of spaces for indentation, 0 to use tabs (default).
+-u, --premultiplied   Atlas images will have premultiplied alpha.
 -b, --alpha-bleeding  Post-process atlas image with an alpha bleeding algorithm.
 -M, --mode            Specifies the packing heuristic. Allowed values are:
                         * auto (default; tries all modes and selects one)

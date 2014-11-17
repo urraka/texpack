@@ -10,6 +10,7 @@ namespace pkr
 			metadata(0),
 			mode("auto"),
 			bleed(false),
+			premultiplied(false),
 			pot(false),
 			rotate(false),
 			pretty(false),
@@ -25,6 +26,7 @@ namespace pkr
 		const char *metadata;
 		const char *mode;
 		bool bleed;
+		bool premultiplied;
 		bool pot;
 		bool rotate;
 		bool pretty;

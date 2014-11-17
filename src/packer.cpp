@@ -604,6 +604,18 @@ namespace pkr
 			if (params.bleed)
 				bleed_apply(&dstbuffer[0], w, h);
 
+			if (params.premultiplied)
+			{
+				for (uint8_t *p = &dstbuffer[0]; p < &dstbuffer.back(); p++)
+				{
+					float alpha = p[3] / 255.f;
+
+					*p++ *= alpha;
+					*p++ *= alpha;
+					*p++ *= alpha;
+				}
+			}
+
 			png::save(filename, w, h, &dstbuffer[0]);
 		}
 

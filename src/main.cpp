@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
 	struct option long_options[] = {
 		{"help",           no_argument,       0, 'h'},
 		{"alpha-bleeding", no_argument,       0, 'b'},
+		{"premultiplied",  no_argument,       0, 'u'},
 		{"POT",            no_argument,       0, 'P'},
 		{"allow-rotate",   no_argument,       0, 'r'},
 		{"pretty",         no_argument,       0, 'e'},
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
 	while (true)
 	{
 		int option_index = 0;
-		int code = getopt_long(argc, argv, "hbPrei:o:m:p:s:S:M:", long_options, &option_index);
+		int code = getopt_long(argc, argv, "hbuPrei:o:m:p:s:S:M:", long_options, &option_index);
 
 		if (code == -1)
 			break;
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
 				return 0;
 
 			case 'b': params.bleed = true;         break;
+			case 'u': params.premultiplied = true; break;
 			case 'P': params.pot = true;           break;
 			case 'r': params.rotate = true;        break;
 			case 'e': params.pretty = true;        break;
