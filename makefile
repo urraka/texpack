@@ -1,6 +1,7 @@
 libs := -lpng -lz
 flags := -g -O2 -Wall -std=c++11
 out := bin/texpack
+PREFIX ?= /usr/local
 
 ifeq ($(shell uname | grep 'MINGW32_NT' -c),1)
   out := bin/texpack.exe
@@ -40,4 +41,7 @@ endif
 clean:
 	rm -rf bin
 
-.PHONY: clean
+install: $(out)
+	cp $(out) "$(PREFIX)/bin/"
+
+.PHONY: clean install
