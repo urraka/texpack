@@ -14,6 +14,7 @@ Options:
 -r, --allow-rotate    Allows sprites to be rotated for better packing.
 -m, --metadata        Input metadata file in json format. (*)
 -e, --pretty          Generated json file will be human readable.
+-t, --trim            Trim input images.
 -i, --indentation     Number of spaces for indentation, 0 to use tabs (default).
 -u, --premultiplied   Atlas images will have premultiplied alpha.
 -b, --alpha-bleeding  Post-process atlas image with an alpha bleeding algorithm.

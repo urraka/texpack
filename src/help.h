@@ -16,6 +16,7 @@ const char *help_text =
 	"-r, --allow-rotate    Allows sprites to be rotated for better packing.\n"
 	"-m, --metadata        Input metadata file in json format. (*)\n"
 	"-e, --pretty          Generated json file will be human readable.\n"
+	"-t, --trim            Trim input images.\n"
 	"-i, --indentation     Number of spaces for indentation, 0 to use tabs (default).\n"
 	"-u, --premultiplied   Atlas images will have premultiplied alpha.\n"
 	"-b, --alpha-bleeding  Post-process atlas image with an alpha bleeding algorithm.\n"

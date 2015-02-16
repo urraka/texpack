@@ -14,6 +14,7 @@ namespace pkr
 			pot(false),
 			rotate(false),
 			pretty(false),
+			trim(false),
 			indentation(0),
 			padding(0),
 			width(0),
@@ -30,6 +31,7 @@ namespace pkr
 		bool pot;
 		bool rotate;
 		bool pretty;
+		bool trim;
 		int indentation;
 		int padding;
 		int width;

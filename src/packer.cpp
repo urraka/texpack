@@ -32,11 +32,17 @@ namespace pkr
 struct Sprite
 {
 	const char *filename;
+
 	int x;
 	int y;
 	int width;
 	int height;
 	bool rotated;
+
+	int real_width;
+	int real_height;
+	int xoffset;
+	int yoffset;
 };
 
 struct Result
@@ -164,6 +170,91 @@ struct Packer
 		}
 	}
 
+	bool read_trim_metrics(Sprite *sprite)
+	{
+		int w, h, channels;
+
+		uint8_t *data = png::load(sprite->filename, &w, &h, &channels);
+
+		if (data == 0)
+			return false;
+
+		sprite->xoffset = 0;
+		sprite->yoffset = 0;
+		sprite->width = w;
+		sprite->height = h;
+		sprite->real_width = w;
+		sprite->real_height = h;
+
+		if (channels != 4)
+			return delete[] data, true;
+
+		int i, l, t, r, b; // left, top, right, bottom
+		int stride = 4 * w;
+
+		// top
+		for (t = 0, i = 3; t < h; t++)
+		{
+			uint8_t value = 0;
+
+			for (int x = 0; x < w; x++, i += 4)
+				value |= data[i];
+
+			if (value != 0)
+				break;
+		}
+
+		if (t == h) // fully transparent image, keep it 1x1
+		{
+			sprite->width = 1;
+			sprite->height = 1;
+			return delete[] data, true;
+		}
+
+		// bottom
+		for (b = h - 1, i = b * stride + 3; b > t; b--, i -= stride)
+		{
+			uint8_t value = 0;
+
+			for (int x = 0, j = i; x < w; x++, j += 4)
+				value |= data[j];
+
+			if (value != 0)
+				break;
+		}
+
+		// left
+		for (l = 0, i = t * stride + 3; l < w; l++, i += 4)
+		{
+			uint8_t value = 0;
+
+			for (int y = t, j = i; y <= b; y++, j += stride)
+				value |= data[j];
+
+			if (value != 0)
+				break;
+		}
+
+		// right
+		for (r = w - 1, i = (t + 1) * stride - 1; r > l; r--, i -= 4)
+		{
+			uint8_t value = 0;
+
+			for (int y = t, j = i; y <= b; y++, j += stride)
+				value |= data[j];
+
+			if (value != 0)
+				break;
+		}
+
+		sprite->xoffset = l;
+		sprite->yoffset = t;
+		sprite->width = (r - l) + 1;
+		sprite->height = (b - t) + 1;
+
+		return delete[] data, true;
+	}
+
 	bool load_sprites_info()
 	{
 		input_sprites.resize(filenames.size());
@@ -176,10 +267,26 @@ struct Packer
 
 			sprite.filename = filenames[i];
 
-			if (!png::info(sprite.filename, &sprite.width, &sprite.height))
+			if (params.trim)
 			{
-				fprintf(stderr, "Error reading image info from %s\n", filenames[i]);
-				return false;
+				if (!read_trim_metrics(&sprite))
+				{
+					fprintf(stderr, "Error reading image %s\n", filenames[i]);
+					return false;
+				}
+			}
+			else
+			{
+				if (!png::info(sprite.filename, &sprite.real_width, &sprite.real_height))
+				{
+					fprintf(stderr, "Error reading image info from %s\n", filenames[i]);
+					return false;
+				}
+
+				sprite.xoffset = 0;
+				sprite.yoffset = 0;
+				sprite.width = sprite.real_width;
+				sprite.height = sprite.real_height;
 			}
 
 			rect.width = sprite.width + params.padding;
@@ -505,7 +612,7 @@ struct Packer
 
 		uint8_t *data = png::load(sprite.filename, &width, &height, channels);
 
-		if (data == 0 || width != sprite.width || height != sprite.height || *channels < 3)
+		if (data == 0 || width != sprite.real_width || height != sprite.real_height || *channels < 3)
 		{
 			fprintf(stderr, "Something is wrong with the image %s\n", sprite.filename);
 
@@ -535,12 +642,14 @@ struct Packer
 			if (data == 0)
 			{
 				channels = 4;
-				srcbuffer.resize(channels * sprite.width * sprite.height);
+				srcbuffer.resize(channels * sprite.real_width * sprite.real_height);
 				data = &srcbuffer[0];
 			}
 
-			const int srcpitch = sprite.width * channels;
-			const uint8_t *src = data;
+			const int x0 = sprite.xoffset;
+			const int y0 = sprite.yoffset;
+			const int srcpitch = sprite.real_width * channels;
+			const uint8_t *src = &data[y0 * srcpitch + x0 * channels];
 
 			if (sprite.rotated)
 			{
@@ -552,12 +661,14 @@ struct Packer
 
 				for (int y = 0; y < sprite.height; y++)
 				{
-					for (int x = 0; x < srcpitch; x += channels)
+					const uint8_t *s = src;
+
+					for (int x = 0; x < sprite.width; x++)
 					{
-						dst[0] = src[x + 0];
-						dst[1] = src[x + 1];
-						dst[2] = src[x + 2];
-						dst[3] = channels == 4 ? src[x + 3] : 0xFF;
+						dst[0] = *s++;
+						dst[1] = *s++;
+						dst[2] = *s++;
+						dst[3] = channels == 4 ? *s++ : 0xFF;
 
 						dst += dstpitch;
 					}
@@ -568,13 +679,14 @@ struct Packer
 			}
 			else
 			{
+				const int row_size = channels * sprite.width;
 				uint8_t *dst = &dstbuffer[4 * (sprite.y * w + sprite.x)];
 
 				if (channels == 4)
 				{
 					for (int y = 0; y < sprite.height; y++)
 					{
-						memcpy(dst, src, srcpitch);
+						memcpy(dst, src, row_size);
 
 						src += srcpitch;
 						dst += dstpitch;
@@ -584,7 +696,7 @@ struct Packer
 				{
 					for (int y = 0; y < sprite.height; y++)
 					{
-						for (int xs = 0, xd = 0; xs < srcpitch; xs += 3, xd += 4)
+						for (int xs = 0, xd = 0; xs < row_size; xs += 3, xd += 4)
 						{
 							dst[xd + 0] = src[xs + 0];
 							dst[xd + 1] = src[xs + 1];
@@ -726,6 +838,21 @@ struct Packer
 			{
 				writer.String("rotated");
 				writer.Bool(sprite.rotated);
+			}
+
+			if (params.trim)
+			{
+				writer.String("real_width");
+				writer.Int(sprite.real_width);
+
+				writer.String("real_height");
+				writer.Int(sprite.real_height);
+
+				writer.String("xoffset");
+				writer.Int(sprite.xoffset);
+
+				writer.String("yoffset");
+				writer.Int(sprite.yoffset);
 			}
 
 			if (metadata.IsObject())

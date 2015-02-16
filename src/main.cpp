@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
 		{"POT",            no_argument,       0, 'P'},
 		{"allow-rotate",   no_argument,       0, 'r'},
 		{"pretty",         no_argument,       0, 'e'},
+		{"trim",           no_argument,       0, 't'},
 		{"indentation",    required_argument, 0, 'i'},
 		{"output",         required_argument, 0, 'o'},
 		{"metadata",       required_argument, 0, 'm'},
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
 	while (true)
 	{
 		int option_index = 0;
-		int code = getopt_long(argc, argv, "hbuPrei:o:m:p:s:S:M:", long_options, &option_index);
+		int code = getopt_long(argc, argv, "hbuPreti:o:m:p:s:S:M:", long_options, &option_index);
 
 		if (code == -1)
 			break;
@@ -51,6 +52,7 @@ int main(int argc, char *argv[])
 			case 'P': params.pot = true;           break;
 			case 'r': params.rotate = true;        break;
 			case 'e': params.pretty = true;        break;
+			case 't': params.trim = true;          break;
 			case 'o': params.output = optarg;      break;
 			case 'm': params.metadata = optarg;    break;
 			case 'M': params.mode = optarg;        break;

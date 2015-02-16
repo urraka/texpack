@@ -51,22 +51,28 @@ The generated json file will have a format like this:
 
 ```javascript
 {
-    "width": 512,              // texture atlas width
-    "height": 512,             // texture atlas height
+    "width": 512,                // texture atlas width
+    "height": 512,               // texture atlas height
 
     "sprites": {
         "image1.png": {
-            "x": 0,            // coords of sprite rect in atlas
+            "x": 0,              // coords of sprite rect in atlas
             "y": 0,
 
-            "width": 60,       // size of sprite rect in atlas
+            "width": 60,         // size of sprite rect in atlas
             "height": 100,
 
-            "rotated": true,   // whether sprite is rotated or not (clockwise)
-                               // available if used --allow-rotate
+            "rotated": true,     // whether sprite is rotated or not (clockwise)
+                                 // available when using --allow-rotate
 
-            "meta": /*...*/    // sprite metadata; available if --metadata
-                               // is given and it has data for the sprite
+            "real_width": 100,   // original dimensions of the image (when using --trim)
+            "real_height": 60,
+
+            "xoffset": 0,        // top-left offset from which the image was trimmed
+            "yoffset": 0,
+
+            "meta": /*...*/      // sprite metadata; available if --metadata
+                                 // is given and it has data for the sprite
         },
         //...
     }
