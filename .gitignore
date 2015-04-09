@@ -3,4 +3,6 @@
 bin/
 test/input/
 test/output/
+test/input2/
+test/output2/
 ext/
