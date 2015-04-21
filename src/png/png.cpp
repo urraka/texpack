@@ -1,3 +1,4 @@
+#define PNG_SKIP_SETJMP_CHECK
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
