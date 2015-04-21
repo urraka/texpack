@@ -99,7 +99,7 @@ In order to build, you will need to make sure that `libpng` and `zlib` are insta
 sudo pacman -S libpng
 
 # Ubuntu
-# sudo apt-get install libpng12-dev  # libpng 1.2 will not work
+sudo apt-get install libpng12-dev  # libpng 1.2 will not work
 ```
 
 `zlib` is a `libpng` dependency so it should be installed along with it.
