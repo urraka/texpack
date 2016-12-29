@@ -19,8 +19,7 @@ namespace pkr
 			padding(0),
 			width(0),
 			height(0),
-			max_width(0),
-			max_height(0)
+			max_size(false)
 		{}
 
 		const char *output;
@@ -36,8 +35,7 @@ namespace pkr
 		int padding;
 		int width;
 		int height;
-		int max_width;
-		int max_height;
+		bool max_size;
 	};
 
 	int pack(std::istream &input, const Params &params);

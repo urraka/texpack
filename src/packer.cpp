@@ -100,17 +100,10 @@ struct Packer
 			return false;
 		}
 
-		if ((params.width > 0 || params.height > 0) &&
+		if ((params.width > 0 || params.height > 0 || params.max_size) &&
 			(params.width <= 0 || params.height <= 0))
 		{
 			fputs("Invalid size.\n", stderr);
-			return false;
-		}
-
-		if ((params.max_width > 0 || params.max_height > 0) &&
-			(params.max_width <= 0 || params.max_height <= 0))
-		{
-			fputs("Invalid max size.\n", stderr);
 			return false;
 		}
 
@@ -120,16 +113,16 @@ struct Packer
 			return false;
 		}
 
-		if (has_max_size() && params.pot)
+		if (params.max_size && params.pot)
 		{
 			int w = 1;
-			while (w <= params.max_width) w <<= 1;
+			while (w <= params.width) w <<= 1;
 
 			int h = 1;
-			while (h <= params.max_height) h <<= 1;
+			while (h <= params.height) h <<= 1;
 
-			params.max_width = w >> 1;
-			params.max_height = h >> 1;
+			params.width = w >> 1;
+			params.height = h >> 1;
 		}
 
 		if (params.indentation < 0)
@@ -293,28 +286,14 @@ struct Packer
 			rect.height = sprite.height + params.padding;
 		}
 
-		int W = 0;
-		int H = 0;
-
-		if (has_fixed_size())
-		{
-			W = params.width;
-			H = params.height;
-		}
-		else if (has_max_size())
-		{
-			W = params.max_width;
-			H = params.max_height;
-		}
-
-		if (W > 0 && H > 0)
+		if (params.width > 0 && params.height > 0)
 		{
 			for (size_t i = 0; i < input_sprites.size(); i++)
 			{
 				int w = 2 * params.padding + input_sprites[i].width;
 				int h = 2 * params.padding + input_sprites[i].height;
 
-				if (w > W || h > H)
+				if (w > params.width || h > params.height)
 				{
 					fputs("Some of the sprites are larger than the allowed size.\n", stderr);
 					return false;
@@ -327,23 +306,13 @@ struct Packer
 
 	bool has_fixed_size()
 	{
-		return params.width > 0 && params.height > 0;
-	}
-
-	bool has_max_size()
-	{
-		return !has_fixed_size() && params.max_width > 0 && params.max_height > 0;
+		return params.width > 0 && params.height > 0 && !params.max_size;
 	}
 
 	bool can_enlarge(int width, int height)
 	{
-		if (has_fixed_size())
-			return false;
-
-		if (!has_max_size())
-			return true;
-
-		return width < params.max_width || height < params.max_height;
+		return !has_fixed_size() && (!params.max_size ||
+			width < params.width || height < params.height);
 	}
 
 	void calculate_initial_size(const std::vector<size_t> &rect_indices, int *w, int *h)
@@ -371,10 +340,10 @@ struct Packer
 
 		*w = *h = n;
 
-		if (has_max_size())
+		if (params.max_size)
 		{
-			*w = std::min(n, params.max_width);
-			*h = std::min(n, params.max_height);
+			*w = std::min(n, params.width);
+			*h = std::min(n, params.height);
 		}
 	}
 
@@ -463,16 +432,16 @@ struct Packer
 			{
 				if (can_enlarge(w, h))
 				{
-					if (has_max_size())
+					if (params.max_size)
 					{
 						int *x = 0;
 
 						if (w > h)
-							x = h < params.max_height ? &h : &w;
+							x = h < params.height ? &h : &w;
 						else
-							x = w < params.max_width ? &w : &h;
+							x = w < params.width ? &w : &h;
 
-						int max = x == &w ? params.max_width : params.max_height;
+						int max = x == &w ? params.width : params.height;
 
 						*x = std::min(*x * 2, max);
 					}

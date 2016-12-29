@@ -11,7 +11,7 @@ const char *help_text =
 	"-o, --output          Prefix for the generated files (atlas and json).\n"
 	"-p, --padding         Padding between sprites.\n"
 	"-s, --size            Fixed size for the atlas image (i.e. 512x512).\n"
-	"-S, --max-size        Max size for the atlas image (ignored if size is used).\n"
+	"-S, --max-size        Treat size parameter as a maximum instead of fixed.\n"
 	"-P, --POT             Keep atlas size a power of two (ignored if size is used).\n"
 	"-r, --allow-rotate    Allows sprites to be rotated for better packing.\n"
 	"-m, --metadata        Input metadata file in json format. (*)\n"
