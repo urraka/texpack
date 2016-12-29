@@ -16,7 +16,7 @@ Options:
 -o, --output          Prefix for the generated files (atlas and json).
 -p, --padding         Padding between sprites.
 -s, --size            Fixed size for the atlas image (i.e. 512x512).
--S, --max-size        Treat size parameter as a maximum instead of fixed.
+-S, --max-size        Treat size parameter as maximum size.
 -P, --POT             Keep atlas size a power of two (ignored if size is used).
 -r, --allow-rotate    Allows sprites to be rotated for better packing.
 -m, --metadata        Input metadata file in json format. (*)
