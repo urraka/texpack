@@ -2,6 +2,8 @@
 
 Simple cross-platform command line texture packer based on the MaxRects packing algorithm by Jukka Jylänki (https://github.com/juj/RectangleBinPack).
 
+There's a Photoshop script port of this tool written in JavaScript. Credits go to Rhody Lugo for that. See here: https://github.com/rraallvv/Layer2SpriteSheet
+
 **Usage:**
 
 ```
