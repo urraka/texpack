@@ -9,7 +9,7 @@ namespace pkr
 			output(0),
 			metadata(0),
 			mode("auto"),
-			format("jsonhash"),
+			format("legacy"),
 			bleed(false),
 			premultiplied(false),
 			pot(false),

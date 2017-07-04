@@ -90,7 +90,8 @@ struct Packer
 	{
 		static const char *modes[] = {
 			"jsonhash",
-			"jsonarray"
+			"jsonarray",
+            "legacy"
 		};
 
 		for (size_t i = 0; i < countof(modes); i++)
@@ -793,109 +794,121 @@ struct Packer
 	template<typename T>
 	void write_json(const Result &result, T &writer, const char *filename)
 	{
-        //int formatting = format_mode(params.format);
+        int formatting = format_mode(params.format);
+        // 0 = jsonhash
+        // 1 = jsonarray
+        // 2 = legacy
         
-		writer.StartObject();
-
-		writer.String("meta");
-		writer.StartObject();
-        
-        // Removes the extension and path, then adds .png back to the file name
-        std::string working_name = remove_extension(filename);
-        std::size_t last_index = working_name.find_last_of("/\\");
-        std::string name = working_name.substr(last_index + 1) + ".png";
-        writer.String("image");
-        writer.Key(name.c_str());
-        
-		writer.String("size");
-		writer.StartObject();
-        
-		writer.String("w");
-		writer.Int(result.width);
-
-		writer.String("h");
-		writer.Int(result.height);
-
-        writer.EndObject();
-        writer.EndObject();
-            
-		writer.String("frames");
-		writer.StartArray();
-
-		for (size_t i = 0; i < result.sprites.size(); i++)
-		{
-			const Sprite &sprite = result.sprites[i];
-
-            writer.StartObject();
-            
-            writer.String("filename");
-            writer.Key(remove_extension(sprite.filename).c_str());
-			
-            writer.String("frame");
+        if (formatting == 0) {
             writer.StartObject();
 
-			writer.String("x");
-			writer.Int(sprite.x);
+            writer.String("frames");
+            writer.StartArray();
 
-			writer.String("y");
-			writer.Int(sprite.y);
+            for (size_t i = 0; i < result.sprites.size(); i++)
+            {
+                const Sprite &sprite = result.sprites[i];
 
-			if (sprite.rotated)
-			{
-				writer.String("w");
-				writer.Int(sprite.height);
+                writer.StartObject();
 
-				writer.String("h");
-				writer.Int(sprite.width);
-			}
-			else
-			{
-				writer.String("w");
-				writer.Int(sprite.width);
+                writer.String("filename");
+                writer.Key(remove_extension(sprite.filename).c_str());
 
-				writer.String("h");
-				writer.Int(sprite.height);
-			}
-            
-            writer.EndObject();
+                writer.String("frame");
+                writer.StartObject();
 
-			if (params.rotate)
-			{
-				writer.String("rotated");
-				writer.Bool(sprite.rotated);
-			}
+                writer.String("x");
+                writer.Int(sprite.x);
 
-			if (params.trim)
-			{
-				writer.String("real_width");
-				writer.Int(sprite.real_width);
+                writer.String("y");
+                writer.Int(sprite.y);
 
-				writer.String("real_height");
-				writer.Int(sprite.real_height);
+                writer.String("w");
+                writer.Int(sprite.rotated ? sprite.height : sprite.width);
 
-				writer.String("xoffset");
-				writer.Int(sprite.xoffset);
+                writer.String("h");
+                writer.Int(sprite.rotated ? sprite.width : sprite.height);
+               
+                writer.EndObject();
 
-				writer.String("yoffset");
-				writer.Int(sprite.yoffset);
-			}
+                writer.String("rotated");
+                writer.Bool(sprite.rotated);
 
-			if (metadata.IsObject())
-			{
-				rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
+                writer.String("trimmed");
+                writer.Bool(params.trim);
+                
+                writer.String("spriteSourceSize");
+                writer.StartObject();
+                
+                writer.String("x");
+                writer.Int(sprite.xoffset);
 
-				if (it != metadata.MemberEnd())
+                writer.String("y");
+                writer.Int(sprite.yoffset);
+                
+                writer.String("w");
+                writer.Int(sprite.rotated ? sprite.height : sprite.width);
+
+                writer.String("h");
+                writer.Int(sprite.rotated ? sprite.width : sprite.height);
+                
+                writer.EndObject();
+                
+                writer.String("sourceSize");
+                writer.StartObject();
+                
+                writer.String("w");
+                writer.Int(sprite.rotated ? sprite.real_height : sprite.real_width);
+
+                writer.String("h");
+                writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
+                
+                writer.EndObject();
+                
+				if (metadata.IsObject())
 				{
-					writer.String("meta");
-					it->value.Accept(writer);
-				}
-			}
-            
-			writer.EndObject();
-		}
+					rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
 
-        writer.EndArray();
-		writer.EndObject();
+					if (it != metadata.MemberEnd())
+					{
+						writer.String("meta");
+						it->value.Accept(writer);
+					}
+				}
+            
+				writer.EndObject();
+			}
+
+    	    writer.EndArray();
+            
+            writer.String("meta");
+            writer.StartObject();
+
+            // Removes the extension and path, then adds .png back to the file namehub
+            std::string working_name = remove_extension(filename);
+            std::size_t last_index = working_name.find_last_of("/\\");
+            std::string name = working_name.substr(last_index + 1) + ".png";
+            writer.String("image");
+            writer.Key(name.c_str());
+
+            writer.String("size");
+            writer.StartObject();
+
+            writer.String("w");
+            writer.Int(result.width);
+
+            writer.String("h");
+            writer.Int(result.height);
+
+            writer.EndObject();
+            writer.EndObject();
+			writer.EndObject();
+            
+        } else if (formatting == 1) {
+            
+        } else if (formatting == 2) {
+            // Legacy   
+        }
 	}
 };
 
