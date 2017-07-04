@@ -127,12 +127,11 @@ The generated json file will have one of the following formats:
 	"spriteSourceSize": {"x":0,"y":0,"w":213,"h":159},
 	"sourceSize": {"w":231,"h":175}
 }],
-
 "meta": {
 	"app": "https://github.com/urraka/texpack",
 	"image": "atlas.png",
 	"size": {"w":650,"h":497},
-}
+    }
 }
 ```
 
