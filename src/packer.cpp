@@ -89,8 +89,8 @@ struct Packer
     int format_mode(const char *mode)
 	{
 		static const char *modes[] = {
-			"jsonhash",
 			"jsonarray",
+			"jsonhash",
             "legacy"
 		};
 
@@ -792,14 +792,105 @@ struct Packer
     }
     
 	template<typename T>
+    void fill_object_info(T &writer, const Sprite &sprite) {
+        writer.String("frame");
+        writer.StartObject();
+
+        writer.String("x");
+        writer.Int(sprite.x);
+
+        writer.String("y");
+        writer.Int(sprite.y);
+
+        writer.String("w");
+        writer.Int(sprite.rotated ? sprite.height : sprite.width);
+
+        writer.String("h");
+        writer.Int(sprite.rotated ? sprite.width : sprite.height);
+               
+        writer.EndObject();
+
+        writer.String("rotated");
+        writer.Bool(sprite.rotated);
+
+        writer.String("trimmed");
+        writer.Bool(params.trim);
+                
+        writer.String("spriteSourceSize");
+        writer.StartObject();
+                
+        writer.String("x");
+        writer.Int(sprite.xoffset);
+
+        writer.String("y");
+        writer.Int(sprite.yoffset);
+                
+        writer.String("w");
+        writer.Int(sprite.rotated ? sprite.height : sprite.width);
+
+        writer.String("h");
+        writer.Int(sprite.rotated ? sprite.width : sprite.height);
+                
+        writer.EndObject();
+                
+        writer.String("sourceSize");
+        writer.StartObject();
+                
+        writer.String("w");
+        writer.Int(sprite.rotated ? sprite.real_height : sprite.real_width);
+
+        writer.String("h");
+        writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
+                
+        writer.EndObject();
+                
+		if (metadata.IsObject())
+		{
+			rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
+
+			if (it != metadata.MemberEnd())
+			{
+				writer.String("meta");
+				it->value.Accept(writer);
+			}
+		}
+    }
+    
+	template<typename T>
+    void fill_meta_info(const Result &result, T &writer, const char *filename) {
+        writer.String("meta");
+        writer.StartObject();
+
+        // Removes the extension and path, then adds .png back to the file namehub
+        std::string working_name = remove_extension(filename);
+        std::size_t last_index = working_name.find_last_of("/\\");
+        std::string name = working_name.substr(last_index + 1) + ".png";
+        writer.String("image");
+        writer.Key(name.c_str());
+
+        writer.String("size");
+        writer.StartObject();
+
+        writer.String("w");
+        writer.Int(result.width);
+
+        writer.String("h");
+        writer.Int(result.height);
+
+        writer.EndObject();
+        writer.EndObject();
+    }
+    
+	template<typename T>
 	void write_json(const Result &result, T &writer, const char *filename)
 	{
         int formatting = format_mode(params.format);
-        // 0 = jsonhash
-        // 1 = jsonarray
+        // 0 = jsonarray
+        // 1 = jsonhash
         // 2 = legacy
         
         if (formatting == 0) {
+            
             writer.StartObject();
 
             writer.String("frames");
@@ -814,7 +905,54 @@ struct Packer
                 writer.String("filename");
                 writer.Key(remove_extension(sprite.filename).c_str());
 
-                writer.String("frame");
+                fill_object_info(writer, sprite);
+				writer.EndObject();
+			}
+
+    	    writer.EndArray();
+            fill_meta_info(result, writer, filename);
+			writer.EndObject();
+            
+        } else if (formatting == 1) {
+            
+            writer.StartObject();
+
+            writer.String("frames");
+            writer.StartObject();
+
+            for (size_t i = 0; i < result.sprites.size(); i++)
+            {
+                const Sprite &sprite = result.sprites[i];
+                
+                writer.String(remove_extension(sprite.filename).c_str());
+                writer.StartObject();
+                
+                fill_object_info(writer, sprite);
+				writer.EndObject();
+			}
+
+    	    writer.EndObject();
+            fill_meta_info(result, writer, filename);
+			writer.EndObject();
+        
+        } else if (formatting == 2) {
+            
+            writer.StartObject();
+
+            writer.String("width");
+            writer.Int(result.width);
+
+            writer.String("height");
+            writer.Int(result.height);
+
+            writer.String("sprites");
+            writer.StartObject();
+
+            for (size_t i = 0; i < result.sprites.size(); i++)
+            {
+                const Sprite &sprite = result.sprites[i];
+
+                writer.String(sprite.filename);
                 writer.StartObject();
 
                 writer.String("x");
@@ -823,91 +961,60 @@ struct Packer
                 writer.String("y");
                 writer.Int(sprite.y);
 
-                writer.String("w");
-                writer.Int(sprite.rotated ? sprite.height : sprite.width);
+                if (sprite.rotated)
+                {
+                    writer.String("width");
+                    writer.Int(sprite.height);
 
-                writer.String("h");
-                writer.Int(sprite.rotated ? sprite.width : sprite.height);
-               
+                    writer.String("height");
+                    writer.Int(sprite.width);
+                }
+                else
+                {
+                    writer.String("width");
+                    writer.Int(sprite.width);
+
+                    writer.String("height");
+                    writer.Int(sprite.height);
+                }
+
+                if (params.rotate)
+                {
+                    writer.String("rotated");
+                    writer.Bool(sprite.rotated);
+                }
+
+                if (params.trim)
+                {
+                    writer.String("real_width");
+                    writer.Int(sprite.real_width);
+
+                    writer.String("real_height");
+                    writer.Int(sprite.real_height);
+
+                    writer.String("xoffset");
+                    writer.Int(sprite.xoffset);
+
+                    writer.String("yoffset");
+                    writer.Int(sprite.yoffset);
+                }
+
+                if (metadata.IsObject())
+                {
+                    rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
+
+                    if (it != metadata.MemberEnd())
+                    {
+                        writer.String("meta");
+                        it->value.Accept(writer);
+                    }
+                }
+
                 writer.EndObject();
-
-                writer.String("rotated");
-                writer.Bool(sprite.rotated);
-
-                writer.String("trimmed");
-                writer.Bool(params.trim);
-                
-                writer.String("spriteSourceSize");
-                writer.StartObject();
-                
-                writer.String("x");
-                writer.Int(sprite.xoffset);
-
-                writer.String("y");
-                writer.Int(sprite.yoffset);
-                
-                writer.String("w");
-                writer.Int(sprite.rotated ? sprite.height : sprite.width);
-
-                writer.String("h");
-                writer.Int(sprite.rotated ? sprite.width : sprite.height);
-                
-                writer.EndObject();
-                
-                writer.String("sourceSize");
-                writer.StartObject();
-                
-                writer.String("w");
-                writer.Int(sprite.rotated ? sprite.real_height : sprite.real_width);
-
-                writer.String("h");
-                writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
-                
-                writer.EndObject();
-                
-				if (metadata.IsObject())
-				{
-					rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
-
-					if (it != metadata.MemberEnd())
-					{
-						writer.String("meta");
-						it->value.Accept(writer);
-					}
-				}
-            
-				writer.EndObject();
-			}
-
-    	    writer.EndArray();
-            
-            writer.String("meta");
-            writer.StartObject();
-
-            // Removes the extension and path, then adds .png back to the file namehub
-            std::string working_name = remove_extension(filename);
-            std::size_t last_index = working_name.find_last_of("/\\");
-            std::string name = working_name.substr(last_index + 1) + ".png";
-            writer.String("image");
-            writer.Key(name.c_str());
-
-            writer.String("size");
-            writer.StartObject();
-
-            writer.String("w");
-            writer.Int(result.width);
-
-            writer.String("h");
-            writer.Int(result.height);
+            }
 
             writer.EndObject();
             writer.EndObject();
-			writer.EndObject();
-            
-        } else if (formatting == 1) {
-            
-        } else if (formatting == 2) {
-            // Legacy   
         }
 	}
 };
