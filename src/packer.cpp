@@ -85,6 +85,22 @@ struct Packer
 
 		return -1;
 	}
+    
+    int format_mode(const char *mode)
+	{
+		static const char *modes[] = {
+			"jsonhash",
+			"jsonarray"
+		};
+
+		for (size_t i = 0; i < countof(modes); i++)
+		{
+			if (strcmp(mode, modes[i]) == 0)
+				return i;
+		}
+
+		return -1;
+	}
 
 	bool validate_params()
 	{
@@ -110,6 +126,12 @@ struct Packer
 		if (pack_mode(params.mode) == -1)
 		{
 			fputs("Invalid packing mode.\n", stderr);
+			return false;
+		}
+        
+        if (format_mode(params.format) == -1)
+		{
+			fputs("Invalid format mode.\n", stderr);
 			return false;
 		}
 
@@ -748,24 +770,42 @@ struct Packer
 			else
 				writer.SetIndent('\t', 1);
 
-			write_json(result, writer);
+			write_json(result, writer, filename);
 		}
 		else
 		{
 			Writer<FileWriteStream> writer(stream);
-			write_json(result, writer);
+			write_json(result, writer, filename);
 		}
 
 		fclose(file);
 	}
     
+    std::string remove_extension(const char *filename)
+    {
+        std::string working_name = filename;
+        std::size_t last_index = working_name.find_last_of(".");
+        std::string name = working_name.substr(0, last_index);
+        
+        return name;
+    }
+    
 	template<typename T>
-	void write_json(const Result &result, T &writer)
+	void write_json(const Result &result, T &writer, const char *filename)
 	{
+        //int formatting = format_mode(params.format);
+        
 		writer.StartObject();
 
 		writer.String("meta");
 		writer.StartObject();
+        
+        // Removes the extension and path, then adds .png back to the file name
+        std::string working_name = remove_extension(filename);
+        std::size_t last_index = working_name.find_last_of("/\\");
+        std::string name = working_name.substr(last_index + 1) + ".png";
+        writer.String("image");
+        writer.Key(name.c_str());
         
 		writer.String("size");
 		writer.StartObject();
@@ -788,12 +828,8 @@ struct Packer
 
             writer.StartObject();
             
-            // Removes the extension from the "filename" parameter
-            std::string working_name = sprite.filename;
-            std::size_t last_index = working_name.find_last_of(".");
-            std::string name = working_name.substr(0, last_index);
             writer.String("filename");
-            writer.Key(name.c_str());
+            writer.Key(remove_extension(sprite.filename).c_str());
 			
             writer.String("frame");
             writer.StartObject();
