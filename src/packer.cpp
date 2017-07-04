@@ -764,21 +764,35 @@ struct Packer
 	{
 		writer.StartObject();
 
-		writer.String("width");
+		writer.String("meta");
+		writer.StartObject();
+        
+		writer.String("size");
+		writer.StartObject();
+        
+		writer.String("w");
 		writer.Int(result.width);
 
-		writer.String("height");
+		writer.String("h");
 		writer.Int(result.height);
 
-		writer.String("sprites");
-		writer.StartObject();
+        writer.EndObject();
+        writer.EndObject();
+            
+		writer.String("frames");
+		writer.StartArray();
 
 		for (size_t i = 0; i < result.sprites.size(); i++)
 		{
 			const Sprite &sprite = result.sprites[i];
 
-			writer.String(sprite.filename);
-			writer.StartObject();
+            writer.StartObject();
+            
+            writer.String("filename");
+			writer.Key(sprite.filename);
+			
+            writer.String("frame");
+            writer.StartObject();
 
 			writer.String("x");
 			writer.Int(sprite.x);
@@ -788,20 +802,22 @@ struct Packer
 
 			if (sprite.rotated)
 			{
-				writer.String("width");
+				writer.String("w");
 				writer.Int(sprite.height);
 
-				writer.String("height");
+				writer.String("h");
 				writer.Int(sprite.width);
 			}
 			else
 			{
-				writer.String("width");
+				writer.String("w");
 				writer.Int(sprite.width);
 
-				writer.String("height");
+				writer.String("h");
 				writer.Int(sprite.height);
 			}
+            
+            writer.EndObject();
 
 			if (params.rotate)
 			{
@@ -834,11 +850,11 @@ struct Packer
 					it->value.Accept(writer);
 				}
 			}
-
+            
 			writer.EndObject();
 		}
 
-		writer.EndObject();
+        writer.EndArray();
 		writer.EndObject();
 	}
 };
