@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 		{"padding",        required_argument, 0, 'p'},
 		{"size",           required_argument, 0, 's'},
 		{"mode",           required_argument, 0, 'M'},
+        {"format",         required_argument, 0, 'f'},
 		{0, 0, 0, 0}
 	};
 
@@ -57,6 +58,7 @@ int main(int argc, char *argv[])
 			case 'm': params.metadata = optarg;    break;
 			case 'M': params.mode = optarg;        break;
 			case 'S': params.max_size = true;      break;
+            case 'f': params.format = optarg;      break;
 
 			case 'i':
 				if (sscanf(optarg, "%d", &params.indentation) != 1)

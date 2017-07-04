@@ -9,6 +9,7 @@ namespace pkr
 			output(0),
 			metadata(0),
 			mode("auto"),
+			format("legacy"),
 			bleed(false),
 			premultiplied(false),
 			pot(false),
@@ -25,6 +26,7 @@ namespace pkr
 		const char *output;
 		const char *metadata;
 		const char *mode;
+		const char *format;
 		bool bleed;
 		bool premultiplied;
 		bool pot;
