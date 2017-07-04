@@ -860,6 +860,9 @@ struct Packer
     void fill_meta_info(const Result &result, T &writer, const char *filename) {
         writer.String("meta");
         writer.StartObject();
+        
+        writer.String("app");
+        writer.Key("https://github.com/urraka/texpack");
 
         // Removes the extension and path, then adds .png back to the file namehub
         std::string working_name = remove_extension(filename);
