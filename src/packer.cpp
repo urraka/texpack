@@ -758,7 +758,7 @@ struct Packer
 
 		fclose(file);
 	}
-
+    
 	template<typename T>
 	void write_json(const Result &result, T &writer)
 	{
@@ -788,8 +788,12 @@ struct Packer
 
             writer.StartObject();
             
+            // Removes the extension from the "filename" parameter
+            std::string working_name = sprite.filename;
+            std::size_t last_index = working_name.find_last_of(".");
+            std::string name = working_name.substr(0, last_index);
             writer.String("filename");
-			writer.Key(sprite.filename);
+            writer.Key(name.c_str());
 			
             writer.String("frame");
             writer.StartObject();
