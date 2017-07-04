@@ -38,7 +38,7 @@ Options:
                         * legacy (default; uses the original JSON format created by urraka)
                         * jsonhash (Texture Atlas JSON Hash format)
                         * jsonarray (Texture Atlas JSON Array format)
-                        
+
 (*) The format of the metadata file should be as follows:
 
     {
@@ -93,24 +93,24 @@ The generated json file will have one of the following formats:
 
 "image1":
 {
-	"frame": {"x":249,"y":205,"w":213,"h":159},
-	"rotated": false,
-	"trimmed": true,
-	"spriteSourceSize": {"x":0,"y":0,"w":213,"h":159},
-	"sourceSize": {"w":231,"h":175}
+    "frame": {"x":249,"y":205,"w":213,"h":159},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":213,"h":159},
+    "sourceSize": {"w":231,"h":175}
 },
 "image2":
 {
-	"frame": {"x":20,"y":472,"w":22,"h":21},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":22,"h":21},
-	"sourceSize": {"w":22,"h":21}
+    "frame": {"x":20,"y":472,"w":22,"h":21},
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {"x":0,"y":0,"w":22,"h":21},
+    "sourceSize": {"w":22,"h":21}
 }},
 "meta": {
-	"app": "https://github.com/urraka/texpack",
-	"image": "atlas.png",
-	"size": {"w":650,"h":497},
+    "app": "https://github.com/urraka/texpack",
+    "image": "atlas.png",
+    "size": {"w":650,"h":497}
     }
 }
 ```
@@ -120,17 +120,17 @@ The generated json file will have one of the following formats:
 {"frames": [
 
 {
-	"filename": "image1",
-	"frame": {"x":249,"y":205,"w":213,"h":159},
-	"rotated": false,
-	"trimmed": true,
-	"spriteSourceSize": {"x":0,"y":0,"w":213,"h":159},
-	"sourceSize": {"w":231,"h":175}
+    "filename": "image1",
+    "frame": {"x":249,"y":205,"w":213,"h":159},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":213,"h":159},
+    "sourceSize": {"w":231,"h":175}
 }],
 "meta": {
-	"app": "https://github.com/urraka/texpack",
-	"image": "atlas.png",
-	"size": {"w":650,"h":497},
+    "app": "https://github.com/urraka/texpack",
+    "image": "atlas.png",
+    "size": {"w":650,"h":497}
     }
 }
 ```
