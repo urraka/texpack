@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	while (true)
 	{
 		int option_index = 0;
-		int code = getopt_long(argc, argv, "hbuPretSi:o:m:p:s:M:", long_options, &option_index);
+		int code = getopt_long(argc, argv, "hbuPretSi:o:m:p:s:M:f:", long_options, &option_index);
 
 		if (code == -1)
 			break;
