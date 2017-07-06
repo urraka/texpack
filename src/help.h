@@ -1,5 +1,5 @@
 #pragma once
-const char *help_text = 
+const char *help_text =
 	"Usage: texpack -o <output-files-prefix> [options...] [<input-file>]\n"
 	"\n"
 	"The <input-file> should contain a list of image files (png) separated by new\n"
@@ -27,6 +27,10 @@ const char *help_text =
 	"                        * long-side\n"
 	"                        * best-area\n"
 	"                        * contact-point\n"
+	"-f, --format          Specifies the output format of the JSON file. Values are:\n"
+	"                        * legacy (default; uses the original JSON format created by urraka)\n"
+	"                        * jsonhash (Texture Atlas JSON Hash format)\n"
+	"                        * jsonarray (Texture Atlas JSON Array format)\n"
 	"\n"
 	"(*) The format of the metadata file should be as follows:\n"
 	"\n"
@@ -37,4 +41,5 @@ const char *help_text =
 	"    }\n"
 	"\n"
 	"    Each file name should match one in the <input-file> list.\n"
+	""
 	"";

@@ -30,14 +30,14 @@ int main(int argc, char *argv[])
 		{"padding",        required_argument, 0, 'p'},
 		{"size",           required_argument, 0, 's'},
 		{"mode",           required_argument, 0, 'M'},
-        {"format",         required_argument, 0, 'f'},
+		{"format",         required_argument, 0, 'f'},
 		{0, 0, 0, 0}
 	};
 
 	while (true)
 	{
 		int option_index = 0;
-		int code = getopt_long(argc, argv, "hbuPretSi:o:m:p:s:M:", long_options, &option_index);
+		int code = getopt_long(argc, argv, "hbuPretSi:o:m:p:s:M:f:", long_options, &option_index);
 
 		if (code == -1)
 			break;
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 			case 'm': params.metadata = optarg;    break;
 			case 'M': params.mode = optarg;        break;
 			case 'S': params.max_size = true;      break;
-            case 'f': params.format = optarg;      break;
+			case 'f': params.format = optarg;      break;
 
 			case 'i':
 				if (sscanf(optarg, "%d", &params.indentation) != 1)
