@@ -189,9 +189,10 @@ struct Packer
 			}
 		}
         
+		// Cycle through all the loaded filenames and generate numbers
+		// e.g. sauce[01-03].png will generate sauce01.png sauce02.png and sauce03.png
 		for (size_t i = 0; i < filenames.size(); i++)
 		{
-			std::cout << filenames[i] << '\n';
 			std::string name(filenames[i]);
 			
 			std::size_t open_bracket = name.find_last_of("[");
@@ -208,23 +209,29 @@ struct Packer
 				// And the brackets are in the proper order (open then closed)
 				if ((dir_marker == std::string::npos || dir_marker < open_bracket) && (dir_marker == std::string::npos || file_extension > close_bracket) && open_bracket < close_bracket)
 				{
-					std::size_t name_length = close_bracket - open_bracket - 1;
-					name = name.substr(open_bracket + 1, close_bracket - open_bracket - 1);
+					std::size_t numbers_length = close_bracket - open_bracket - 1;
+					std::string numbers = name.substr(open_bracket + 1, close_bracket - open_bracket - 1);
 					
 					// If everything is a valid number (or a hyphen)
-					if (name.find_first_not_of("0123456789-") == std::string::npos){
+					if (numbers.find_first_not_of("0123456789-") == std::string::npos){
 						
-						int hyphen = name.find_first_of("-");
+						int hyphen = numbers.find_first_of("-");
 						
 						// And there's one "-" (hyphen)
-						if (hyphen == name.find_last_of("-") && hyphen != std::string::npos)
+						if (hyphen == numbers.find_last_of("-") && hyphen != std::string::npos)
 						{
-							// Removes the filename
+							// Removes the original filename
 							filenames.erase(filenames.begin() + i);
 							
+							std::string filename_start = name.substr(0, open_bracket);
+							std::string filename_end = name.substr(close_bracket + 1);
+							
+							std::cout << "start: " << filename_start << '\n';
+							std::cout << "end: " << filename_end << '\n';
+							
 							// The minimum length should be the length of the string of the frist number given
-							std::string first = name.substr(0, hyphen);
-							std::string second = name.substr(hyphen + 1, name_length - hyphen - 1);
+							std::string first = numbers.substr(0, hyphen);
+							std::string second = numbers.substr(hyphen + 1, numbers_length - hyphen - 1);
 							
 							int first_num = std::stoi(first);
 							int second_num = std::stoi(second);
@@ -241,10 +248,15 @@ struct Packer
 									number_string = "0" + number_string;
 								}
 								
-								std::cout << "i: " << number_string << '\n';
+								std::string new_filename = filename_start + number_string + filename_end;
 								
-								// TODO
-								filenames.push_back(number_string);
+								// Converts the string to s char*
+								char * writable = new char[new_filename.size() + 1];
+								std::copy(new_filename.begin(), new_filename.end(), writable);
+								writable[new_filename.size()] = '\0'; // Terminate
+								
+								// Adds the entry to the list
+								filenames.push_back(writable);
 							}
 						}
 						else
