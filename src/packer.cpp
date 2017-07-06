@@ -171,17 +171,47 @@ struct Packer
 
 		bool addnext = true;
 
+        // Cycles through the list of file names
 		for (size_t i = 0; i < filenamesbuf.size(); i++)
 		{
+            // If a new line
 			if (filenamesbuf[i] == '\n' || filenamesbuf[i] == '\r')
 			{
+                // clears the current line
 				filenamesbuf[i] = '\0';
+                // Add the next, as it's the data we want
 				addnext = true;
 			}
 			else if (addnext)
 			{
 				filenames.push_back(&filenamesbuf[i]);
 				addnext = false;
+			}
+		}
+        
+		for (size_t i = 0; i < filenames.size(); i++)
+		{
+			std::cout << filenames[i] << '\n';
+			std::size_t open_bracket = std::string(filenames[i]).find_last_of("[");
+			std::size_t close_bracket = std::string(filenames[i]).find_last_of("]");
+			
+			// If there is both an open and close square bracket []
+			if (open_bracket != std::string::npos && close_bracket != std::string::npos)
+			{
+				std::size_t dir_marker = std::string(filenames[i]).find_last_of("/\\");
+				std::size_t file_extension = std::string(filenames[i]).find_last_of(".");
+				
+				// If there are no directory markings, or if there are, that the square bracket comes after all of them
+				// And if there is no extension, or if there is, that the square bracket comes before it
+				// And the brackets are in the proper order (open then closed)
+				if ((dir_marker == std::string::npos || dir_marker < open_bracket) && (dir_marker == std::string::npos || file_extension > close_bracket) && open_bracket < close_bracket)
+				{
+					std::cout << "This is Dank ^^^^^ \n";
+				}
+				else
+				{
+					fprintf(stderr, "Bracket formatting error %s\n", filenames[i]);
+				}
 			}
 		}
 	}
