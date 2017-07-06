@@ -192,25 +192,74 @@ struct Packer
 		for (size_t i = 0; i < filenames.size(); i++)
 		{
 			std::cout << filenames[i] << '\n';
-			std::size_t open_bracket = std::string(filenames[i]).find_last_of("[");
-			std::size_t close_bracket = std::string(filenames[i]).find_last_of("]");
+			std::string name(filenames[i]);
+			
+			std::size_t open_bracket = name.find_last_of("[");
+			std::size_t close_bracket = name.find_last_of("]");
 			
 			// If there is both an open and close square bracket []
 			if (open_bracket != std::string::npos && close_bracket != std::string::npos)
 			{
-				std::size_t dir_marker = std::string(filenames[i]).find_last_of("/\\");
-				std::size_t file_extension = std::string(filenames[i]).find_last_of(".");
+				std::size_t dir_marker = name.find_last_of("/\\");
+				std::size_t file_extension = name.find_last_of(".");
 				
-				// If there are no directory markings, or if there are, that the square bracket comes after all of them
-				// And if there is no extension, or if there is, that the square bracket comes before it
+				// If there are no directory markings OR if there are, that the square bracket comes after all of them
+				// And if there is no extension OR if there is, that the square bracket comes before it
 				// And the brackets are in the proper order (open then closed)
 				if ((dir_marker == std::string::npos || dir_marker < open_bracket) && (dir_marker == std::string::npos || file_extension > close_bracket) && open_bracket < close_bracket)
 				{
-					std::cout << "This is Dank ^^^^^ \n";
+					std::size_t name_length = close_bracket - open_bracket - 1;
+					name = name.substr(open_bracket + 1, close_bracket - open_bracket - 1);
+					
+					// If everything is a valid number (or a hyphen)
+					if (name.find_first_not_of("0123456789-") == std::string::npos){
+						
+						int hyphen = name.find_first_of("-");
+						
+						// And there's one "-" (hyphen)
+						if (hyphen == name.find_last_of("-") && hyphen != std::string::npos)
+						{
+							// Removes the filename
+							filenames.erase(filenames.begin() + i);
+							
+							// The minimum length should be the length of the string of the frist number given
+							std::string first = name.substr(0, hyphen);
+							std::string second = name.substr(hyphen + 1, name_length - hyphen - 1);
+							
+							int first_num = std::stoi(first);
+							int second_num = std::stoi(second);
+							
+							for (int i = first_num; i <= second_num; i++)
+							{
+								std::string number_string = std::to_string(i);
+								int num_str_length = number_string.length();
+								int total_length = hyphen - num_str_length; // hyphen is the minimum length
+								
+								// Add zeros to the beginning of the string until the length of the string is the minimum
+								for (int j = 0; j < total_length; j++)
+								{
+									number_string = "0" + number_string;
+								}
+								
+								std::cout << "i: " << number_string << '\n';
+								
+								// TODO
+								filenames.push_back(number_string);
+							}
+						}
+						else
+						{
+							fprintf(stderr, "Invalid hyphen in brackets %s\n", filenames[i]);
+						}
+					}
+					else
+					{
+						fprintf(stderr, "Invalid character in brackets, only accepts numbers and a hyphen %s\n", filenames[i]);
+					}
 				}
 				else
 				{
-					fprintf(stderr, "Bracket formatting error %s\n", filenames[i]);
+					fprintf(stderr, "Invalid bracket formatting %s\n", filenames[i]);
 				}
 			}
 		}
