@@ -52,7 +52,7 @@ Options:
 
 **Input:**
 
-The input file should be a plain text file, with each image to add to the texture atlas on a new line. For example, if your file tree looked like this:
+The input file should be a plain text file with each image on a new line. For example, if your file tree looked like this:
 
 ```
 assets
@@ -83,13 +83,13 @@ ambient/light/glare.png
 planets/jupiter.png
 ```
 
-For ease of use, you can include several numbered files in a single line within the input file. For example, if you had a 12 frame fire animation with the files `fire1.png`, `fire2.png`... `fire11.png`, `fire12.png`, instead of writing each file on their own individual line in the input file, you can write the range of numbers in brackets where the numbers would usually go. For our fire animation example, the line to import them in the input file would look like this:
+For ease of use, you can include several numbered files in a single line within the input file. For example, if you had a 12 frame fire animation with the files `fire1.png`, `fire2.png` ... `fire12.png`, instead of writing each file on their own individual line in the input file, you can write the range of numbers in brackets where the numbers would usually go. For our fire animation example, the line to import them in the input file would look like this:
 
 ```
 fire[1-12].png
 ```
 
-Some animation creation programs output the files with numbers like `fire0001`, `fire0002` etc. If there are leading zeros to the filer numbers, you must specify them on the input file as such:
+Some animation creation programs output the files with numbers like `fire0001`, `fire0002` etc. If there are leading zeros to the file numbers, you must specify them on the input file as such:
 
 ```
 fire[0001-0012].png
@@ -171,6 +171,14 @@ The generated json file will have one of the following formats:
     "trimmed": true,
     "spriteSourceSize": {"x":0,"y":0,"w":213,"h":159},
     "sourceSize": {"w":231,"h":175}
+},
+{
+    "filename": "image2",
+    "frame": {"x":29,"y":472,"w":22,"h":21},
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {"x":0,"y":0,"w":22,"h":21},
+    "sourceSize": {"w":22,"h":21}
 }],
 "meta": {
     "app": "https://github.com/urraka/texpack",
