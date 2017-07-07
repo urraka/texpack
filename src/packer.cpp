@@ -220,43 +220,47 @@ struct Packer
 						// And there's one "-" (hyphen)
 						if (hyphen == numbers.find_last_of("-") && hyphen != std::string::npos)
 						{
-							// Removes the original filename
-							filenames.erase(filenames.begin() + i);
-							
-							std::string filename_start = name.substr(0, open_bracket);
-							std::string filename_end = name.substr(close_bracket + 1);
-							
-							std::cout << "start: " << filename_start << '\n';
-							std::cout << "end: " << filename_end << '\n';
-							
-							// The minimum length should be the length of the string of the frist number given
+							// The minimum length of the number should be the length of the frist number given, therefore the value of hyphen
 							std::string first = numbers.substr(0, hyphen);
 							std::string second = numbers.substr(hyphen + 1, numbers_length - hyphen - 1);
 							
 							int first_num = std::stoi(first);
 							int second_num = std::stoi(second);
 							
-							for (int i = first_num; i <= second_num; i++)
+							if (first_num < second_num)
 							{
-								std::string number_string = std::to_string(i);
-								int num_str_length = number_string.length();
-								int total_length = hyphen - num_str_length; // hyphen is the minimum length
-								
-								// Add zeros to the beginning of the string until the length of the string is the minimum
-								for (int j = 0; j < total_length; j++)
+								// Removes the original filename
+								filenames.erase(filenames.begin() + i);
+
+								std::string filename_start = name.substr(0, open_bracket);
+								std::string filename_end = name.substr(close_bracket + 1);
+
+								for (int i = first_num; i <= second_num; i++)
 								{
-									number_string = "0" + number_string;
+									std::string number_string = std::to_string(i);
+									int num_str_length = number_string.length();
+									int total_length = hyphen - num_str_length; // hyphen is the minimum length
+
+									// Add zeros to the beginning of the string until the length of the string is the minimum
+									for (int j = 0; j < total_length; j++)
+									{
+										number_string = "0" + number_string;
+									}
+
+									std::string new_filename = filename_start + number_string + filename_end;
+
+									// Converts the string to s char*
+									char * writable = new char[new_filename.size() + 1];
+									std::copy(new_filename.begin(), new_filename.end(), writable);
+									writable[new_filename.size()] = '\0'; // Terminate
+
+									// Adds the entry to the list
+									filenames.push_back(writable);
 								}
-								
-								std::string new_filename = filename_start + number_string + filename_end;
-								
-								// Converts the string to s char*
-								char * writable = new char[new_filename.size() + 1];
-								std::copy(new_filename.begin(), new_filename.end(), writable);
-								writable[new_filename.size()] = '\0'; // Terminate
-								
-								// Adds the entry to the list
-								filenames.push_back(writable);
+							}
+							else
+							{
+								fprintf(stderr, "Invalid bracket numbers %s\n", filenames[i]);
 							}
 						}
 						else
