@@ -89,7 +89,7 @@ For ease of use, you can include several numbered files in a single line within 
 fire[1-12].png
 ```
 
-Some animation creation programs output the files with numbers like `fire0001`, `fire0002` etc. If there are leading zeros to the file numbers, you must specify them on the input file as such:
+Some animation creation programs output the files with numbers like `fire0001.png`, `fire0002.png` etc. If there are leading zeros to the file numbers, you must specify them on the input file as such:
 
 ```
 fire[0001-0012].png
