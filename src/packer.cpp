@@ -8,6 +8,8 @@
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/prettywriter.h"
 
+#include "sebclaeys_xml/XMLWriter.hh"
+
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -984,6 +986,13 @@ struct Packer
 	template<typename T>
 	void write_json(const Result &result, T &writer, const char *filename)
 	{
+        XMLWriter xmlwriter(std::cout);
+        xmlwriter.openElt("Movies");
+        xmlwriter.openElt("Goldeneye").attr("date", "1998").content("This is a James Bond movie").closeElt();
+        xmlwriter.openElt("Leon").attr("director", "Luc Besson");
+        xmlwriter.openElt("Actor").attr("role", "Leon").attr("name", "Jean Reno").closeAll();
+        std::cout << std::endl;
+        
 		int formatting = format_mode(params.format);
 		// 0 = jsonarray
 		// 1 = jsonhash
