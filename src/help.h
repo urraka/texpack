@@ -31,6 +31,7 @@ const char *help_text =
 	"                        * legacy (default; uses the original JSON format created by urraka)\n"
 	"                        * jsonhash (Texture Atlas JSON Hash format)\n"
 	"                        * jsonarray (Texture Atlas JSON Array format)\n"
+    "                        * xml (Texture Atlas XML)jsonhash
 	"\n"
 	"(*) The format of the metadata file should be as follows:\n"
 	"\n"

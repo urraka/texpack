@@ -8,6 +8,8 @@
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/prettywriter.h"
 
+#include "sebclaeys_xml/XMLWriter.hh"
+
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -54,6 +56,8 @@ struct Result
 
 struct Packer
 {
+    int formatting;
+    
 	Params params;
 
 	std::vector<char*> filenames;
@@ -91,7 +95,8 @@ struct Packer
 		static const char *modes[] = {
 			"jsonarray",
 			"jsonhash",
-			"legacy"
+			"legacy",
+            "xml"
 		};
 
 		for (size_t i = 0; i < countof(modes); i++)
@@ -130,7 +135,8 @@ struct Packer
 			return false;
 		}
 
-		if (format_mode(params.format) == -1)
+        formatting = format_mode(params.format);
+		if (formatting == -1)
 		{
 			fputs("Invalid format mode.\n", stderr);
 			return false;
@@ -819,7 +825,7 @@ struct Packer
 		png::save(filename, w, h, &dstbuffer[0]);
 	}
 
-	void create_json_files(const std::vector<Result*> &results)
+	void create_files(const std::vector<Result*> &results)
 	{
 		char buf[32];
 		std::string filename;
@@ -830,164 +836,115 @@ struct Packer
 
 			if (results.size() > 1)
 			{
-				sprintf(buf, "-%d.json", (int)i);
+                // XML formatting
+                if (formatting == 3)
+                    sprintf(buf, "-%d.xml", (int)i);
+                else
+                    sprintf(buf, "-%d.json", (int)i);
+                
 				filename += buf;
 			}
 			else
 			{
-				filename += ".json";
+				filename += formatting == 3 ? ".xml" : ".json";
 			}
 
-			create_json_file(filename.c_str(), *results[i]);
+			create_file(filename.c_str(), *results[i]);
 		}
 	}
 
-	void create_json_file(const char *filename, const Result &result)
+	void create_file(const char *filename, const Result &result)
 	{
-		FILE *file = fopen(filename, "wb");
+        // XML formatting
+        if (formatting == 3)
+        {
+            std::ofstream stream2;
+            stream2.open(filename);
+            
+            XMLWriter writer(stream2);
+            write_xml(result, writer, filename);
+        }
+        else
+        {
+            FILE *file = fopen(filename, "wb");
 
-		if (file == 0)
-		{
-			fprintf(stderr, "Error creating file %s\n", filename);
-			return;
-		}
+            if (file == 0)
+            {
+                fprintf(stderr, "Error creating file %s\n", filename);
+                return;
+            }
 
-		using namespace rapidjson;
+            using namespace rapidjson;
 
-		char buffer[4096];
-		FileWriteStream stream(file, buffer, sizeof(buffer));
+            char buffer[4096];
+            FileWriteStream stream(file, buffer, sizeof(buffer));
 
-		if (params.pretty)
-		{
-			PrettyWriter<FileWriteStream> writer(stream);
+            // Setup JSON writer
+            if (params.pretty)
+            {
+                PrettyWriter<FileWriteStream> writer(stream);
 
-			if (params.indentation > 0)
-				writer.SetIndent(' ', params.indentation);
-			else
-				writer.SetIndent('\t', 1);
+                if (params.indentation > 0)
+                    writer.SetIndent(' ', params.indentation);
+                else
+                    writer.SetIndent('\t', 1);
 
-			write_json(result, writer, filename);
-		}
-		else
-		{
-			Writer<FileWriteStream> writer(stream);
-			write_json(result, writer, filename);
-		}
-
-		fclose(file);
+                write_json(result, writer, filename);
+            }
+            else
+            {
+                Writer<FileWriteStream> writer(stream);
+                write_json(result, writer, filename);
+            }
+            fclose(file);
+        }
 	}
 
-	std::string remove_extension(const char *filename)
-	{
-		std::string working_name = filename;
-		std::size_t last_index = working_name.find_last_of(".");
-		std::string name = working_name.substr(0, last_index);
-
-		return name;
-	}
-
-	template<typename T>
-	void fill_object_info(T &writer, const Sprite &sprite)
-	{
-		writer.String("frame");
-		writer.StartObject();
-
-		writer.String("x");
-		writer.Int(sprite.x);
-
-		writer.String("y");
-		writer.Int(sprite.y);
-
-		writer.String("w");
-		writer.Int(sprite.rotated ? sprite.height : sprite.width);
-
-		writer.String("h");
-		writer.Int(sprite.rotated ? sprite.width : sprite.height);
-
-		writer.EndObject();
-
-		writer.String("rotated");
-		writer.Bool(sprite.rotated);
-
-		writer.String("trimmed");
-		writer.Bool(params.trim);
-
-		writer.String("spriteSourceSize");
-		writer.StartObject();
-
-		writer.String("x");
-		writer.Int(sprite.xoffset);
-
-		writer.String("y");
-		writer.Int(sprite.yoffset);
-
-		writer.String("w");
-		writer.Int(sprite.rotated ? sprite.height : sprite.width);
-
-		writer.String("h");
-		writer.Int(sprite.rotated ? sprite.width : sprite.height);
-
-		writer.EndObject();
-
-		writer.String("sourceSize");
-		writer.StartObject();
-
-		writer.String("w");
-		writer.Int(sprite.rotated ? sprite.real_height : sprite.real_width);
-
-		writer.String("h");
-		writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
-
-		writer.EndObject();
-
-		if (metadata.IsObject())
+    void write_xml(const Result &result, XMLWriter writer, const char *filename)
+    {
+        writer.content("<!-- Created with TexPack https://github.com/urraka/texpack -->\n");
+        
+        writer.openElt("TextureAtlas");
+        writer.attr("imagePath", format_meta_image_name(filename));
+        writer.attr("width", result.width);
+        writer.attr("height", result.height);
+        
+        for (size_t i = 0; i < result.sprites.size(); i++)
 		{
-			rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
-
-			if (it != metadata.MemberEnd())
-			{
-				writer.String("meta");
-				it->value.Accept(writer);
-			}
-		}
-	}
-
-	template<typename T>
-	void fill_meta_info(const Result &result, T &writer, const char *filename)
-	{
-		writer.String("meta");
-		writer.StartObject();
-
-		writer.String("app");
-		writer.Key("https://github.com/urraka/texpack");
-
-		// Removes the extension and path, then adds .png back to the file namehub
-		std::string working_name = remove_extension(filename);
-		std::size_t last_index = working_name.find_last_of("/\\");
-		std::string name = working_name.substr(last_index + 1) + ".png";
-		writer.String("image");
-		writer.Key(name.c_str());
-
-		writer.String("size");
-		writer.StartObject();
-
-		writer.String("w");
-		writer.Int(result.width);
-
-		writer.String("h");
-		writer.Int(result.height);
-
-		writer.EndObject();
-		writer.EndObject();
-	}
-
+            const Sprite &sprite = result.sprites[i];
+            
+            writer.openElt("SubTexture");
+            
+            writer.attr("name", remove_extension(sprite.filename));
+            writer.attr("x", sprite.x);
+            writer.attr("y", sprite.y);
+            
+            if (sprite.rotated) // By default rotated is false in xml loaders, so don't include it unless it's neccessary
+                writer.attr("rotated", "true");
+            
+            writer.attr("width", sprite.rotated ? sprite.height : sprite.width);
+            writer.attr("height", sprite.rotated ? sprite.width : sprite.height);
+            
+            if (params.trim){
+                writer.attr("frameX", sprite.xoffset);
+                writer.attr("frameY", sprite.yoffset);
+                writer.attr("frameWidth", sprite.real_width);
+                writer.attr("frameHeight", sprite.real_height);
+            }
+            
+            writer.closeElt();
+        }
+        
+        writer.closeAll();
+    }
+    
 	template<typename T>
 	void write_json(const Result &result, T &writer, const char *filename)
 	{
-		int formatting = format_mode(params.format);
 		// 0 = jsonarray
 		// 1 = jsonhash
 		// 2 = legacy
+        // 3 = xml
 
 		if (formatting == 0)
 		{
@@ -1012,7 +969,6 @@ struct Packer
 			writer.EndArray();
 			fill_meta_info(result, writer, filename);
 			writer.EndObject();
-
 		}
 		else if (formatting == 1)
 		{
@@ -1063,23 +1019,11 @@ struct Packer
 				writer.String("y");
 				writer.Int(sprite.y);
 
-				if (sprite.rotated)
-				{
-					writer.String("width");
-					writer.Int(sprite.height);
-
-					writer.String("height");
-					writer.Int(sprite.width);
-				}
-				else
-				{
-					writer.String("width");
-					writer.Int(sprite.width);
-
-					writer.String("height");
-					writer.Int(sprite.height);
-				}
-
+                writer.String("width");
+                writer.Int(sprite.rotated ? sprite.height : sprite.width);
+				writer.String("height");
+                writer.Int(sprite.rotated ? sprite.width : sprite.height);
+                
 				if (params.rotate)
 				{
 					writer.String("rotated");
@@ -1118,6 +1062,122 @@ struct Packer
 			writer.EndObject();
 			writer.EndObject();
 		}
+	}
+    
+    std::string remove_extension(const char *filename)
+	{
+		std::string working_name = filename;
+		std::size_t last_index = working_name.find_last_of(".");
+		std::string name = working_name.substr(0, last_index);
+
+		return name;
+	}
+
+	template<typename T>
+	void fill_object_info(T &writer, const Sprite &sprite)
+	{
+		writer.String("frame");
+		writer.StartObject();
+
+		writer.String("x");
+		writer.Int(sprite.x);
+
+		writer.String("y");
+		writer.Int(sprite.y);
+
+		writer.String("w");
+		writer.Int(sprite.rotated ? sprite.height : sprite.width);
+
+		writer.String("h");
+		writer.Int(sprite.rotated ? sprite.width : sprite.height);
+
+		writer.EndObject();
+
+        if (sprite.rotated)
+        {
+            writer.String("rotated");
+            writer.Bool(sprite.rotated);
+        }
+        
+        if (params.trim)
+        {
+            writer.String("trimmed");
+		 	writer.Bool(params.trim);
+
+			writer.String("spriteSourceSize");
+			writer.StartObject();
+
+			writer.String("x");
+			writer.Int(sprite.xoffset);
+
+			writer.String("y");
+			writer.Int(sprite.yoffset);
+
+			writer.String("w");
+			writer.Int(sprite.rotated ? sprite.height : sprite.width);
+
+			writer.String("h");
+			writer.Int(sprite.rotated ? sprite.width : sprite.height);
+
+			writer.EndObject();
+
+			writer.String("sourceSize");
+			writer.StartObject();
+
+			writer.String("w");
+			writer.Int(sprite.rotated ? sprite.real_height : sprite.real_width);
+
+			writer.String("h");
+			writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
+			
+			writer.EndObject();
+        }
+		
+		if (metadata.IsObject())
+		{
+			rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
+
+			if (it != metadata.MemberEnd())
+			{
+				writer.String("meta");
+				it->value.Accept(writer);
+			}
+		}
+	}
+
+    std::string format_meta_image_name(const char *filename)
+	{
+		// Removes the extension and path, then adds .png back to the file namehub
+		std::string working_name = remove_extension(filename);
+		std::size_t last_index = working_name.find_last_of("/\\");
+		std::string name = working_name.substr(last_index + 1) + ".png";
+
+		return name;
+	}
+    
+	template<typename T>
+	void fill_meta_info(const Result &result, T &writer, const char *filename)
+	{
+		writer.String("meta");
+		writer.StartObject();
+
+		writer.String("app");
+		writer.Key("https://github.com/urraka/texpack");
+
+		writer.String("image");
+		writer.Key(format_meta_image_name(filename).c_str());
+
+		writer.String("size");
+		writer.StartObject();
+
+		writer.String("w");
+		writer.Int(result.width);
+
+		writer.String("h");
+		writer.Int(result.height);
+
+		writer.EndObject();
+		writer.EndObject();
 	}
 };
 
@@ -1171,7 +1231,8 @@ int pack(std::istream &input, const Params &params)
 	packer.create_png_files(results);
 
 	packer.load_metadata();
-	packer.create_json_files(results);
+    
+	packer.create_files(results);
 
 	for (size_t i = 0; i < results.size(); i++)
 		delete results[i];
