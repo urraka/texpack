@@ -38,6 +38,7 @@ Options:
                         * legacy (default; uses the original JSON format created by urraka)
                         * jsonhash (Texture Atlas JSON Hash format)
                         * jsonarray (Texture Atlas JSON Array format)
+                        * xml (Texture Atlas XML)
 
 (*) The format of the metadata file should be as follows:
 
