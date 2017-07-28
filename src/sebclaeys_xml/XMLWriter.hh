@@ -9,7 +9,7 @@
 # include <stack>
 # include <fstream>
 
-// XML writer by sebclaeys 
+// Modified by qwertysam, based on XML writer by sebclaeys 
 // https://gist.github.com/sebclaeys/1227644/3761c33416d71c20efc300e78ea1dc36221185c5#file-example-cpp-L5
 class XMLWriter
 {
@@ -61,6 +61,10 @@ public:
   XMLWriter& attr(const char* key, std::string val) {
     return attr(key, val.c_str());
   }
+    
+  XMLWriter& attr(const char* key, int val) {
+    return attr(key, std::to_string(val));
+  }
 
   XMLWriter& content(const char* val) {
     this->closeTag();
@@ -90,11 +94,11 @@ private:
   inline void write_escape(const char* str) {
     for (; *str; str++)
       switch (*str) {
-      case '&': os << "&amp;"; break;
-      case '<': os << "&lt;"; break;
-      case '>': os << "&gt;"; break;
-      case '\'': os << "&apos;"; break;
-      case '"': os << "&quot;"; break;
+      //case '&': os << "&amp;"; break;
+      //case '<': os << "&lt;"; break;
+      //case '>': os << "&gt;"; break;
+      //case '\'': os << "&apos;"; break;
+      //case '"': os << "&quot;"; break;
       default: os.put(*str); break;
       }
   }

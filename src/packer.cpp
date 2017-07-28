@@ -858,10 +858,10 @@ struct Packer
         // XML formatting
         if (formatting == 3)
         {
-            std::ofstream stream;
-            stream.open(filename);
+            std::ofstream stream2;
+            stream2.open(filename);
             
-            XMLWriter writer(stream);
+            XMLWriter writer(stream2);
             write_xml(result, writer, filename);
         }
         else
@@ -879,44 +879,63 @@ struct Packer
             char buffer[4096];
             FileWriteStream stream(file, buffer, sizeof(buffer));
 
-                // Setup JSON writer
-                if (params.pretty)
-                {
-                    PrettyWriter<FileWriteStream> writer(stream);
+            // Setup JSON writer
+            if (params.pretty)
+            {
+                PrettyWriter<FileWriteStream> writer(stream);
 
-                    if (params.indentation > 0)
-                        writer.SetIndent(' ', params.indentation);
-                    else
-                        writer.SetIndent('\t', 1);
-
-                    write_json(result, writer, filename);
-                }
+                if (params.indentation > 0)
+                    writer.SetIndent(' ', params.indentation);
                 else
-                {
-                    Writer<FileWriteStream> writer(stream);
-                    write_json(result, writer, filename);
-                }
+                    writer.SetIndent('\t', 1);
+
+                write_json(result, writer, filename);
+            }
+            else
+            {
+                Writer<FileWriteStream> writer(stream);
+                write_json(result, writer, filename);
+            }
             fclose(file);
         }
 	}
 
     void write_xml(const Result &result, XMLWriter writer, const char *filename)
     {
-        writer.openElt("TextureAtlas").attr("imagePath", filename);
+        writer.content("<!-- Created with TexPack https://github.com/urraka/texpack -->\n");
         
-        writer.openElt("Goldeneye").attr("date", "1998").content("This is a James Bond movie").closeElt();
-        writer.openElt("Leon").attr("director", "Luc Besson");
-        writer.openElt("Actor").attr("role", "Leon").attr("name", "Jean Reno").closeAll();
+        writer.openElt("TextureAtlas");
+        writer.attr("imagePath", format_meta_image_name(filename));
+        writer.attr("width", result.width);
+        writer.attr("height", result.height);
         
-        /*
-        XMLWriter xmlwriter(std::cout);
-        xmlwriter.openElt("Movies");
-        xmlwriter.openElt("Goldeneye").attr("date", "1998").content("This is a James Bond movie").closeElt();
-        xmlwriter.openElt("Leon").attr("director", "Luc Besson");
-        xmlwriter.openElt("Actor").attr("role", "Leon").attr("name", "Jean Reno").closeAll();
-        std::cout << std::endl;*/
+        for (size_t i = 0; i < result.sprites.size(); i++)
+		{
+            const Sprite &sprite = result.sprites[i];
+            
+            writer.openElt("SubTexture");
+            
+            writer.attr("name", remove_extension(sprite.filename));
+            writer.attr("x", sprite.x);
+            writer.attr("y", sprite.y);
+            
+            if (sprite.rotated) // By default rotated is false in xml loaders, so don't include it unless it's neccessary
+                writer.attr("rotated", "true");
+            
+            writer.attr("width", sprite.rotated ? sprite.height : sprite.width);
+            writer.attr("height", sprite.rotated ? sprite.width : sprite.height);
+            
+            if (params.trim){
+                writer.attr("frameX", sprite.xoffset);
+                writer.attr("frameY", sprite.yoffset);
+                writer.attr("frameWidth", sprite.real_width);
+                writer.attr("frameHeight", sprite.real_height);
+            }
+            
+            writer.closeElt();
+        }
         
-        
+        writer.closeAll();
     }
     
 	template<typename T>
@@ -1000,23 +1019,11 @@ struct Packer
 				writer.String("y");
 				writer.Int(sprite.y);
 
-				if (sprite.rotated)
-				{
-					writer.String("width");
-					writer.Int(sprite.height);
-
-					writer.String("height");
-					writer.Int(sprite.width);
-				}
-				else
-				{
-					writer.String("width");
-					writer.Int(sprite.width);
-
-					writer.String("height");
-					writer.Int(sprite.height);
-				}
-
+                writer.String("width");
+                writer.Int(sprite.rotated ? sprite.height : sprite.width);
+				writer.String("height");
+                writer.Int(sprite.rotated ? sprite.width : sprite.height);
+                
 				if (params.rotate)
 				{
 					writer.String("rotated");
@@ -1086,40 +1093,46 @@ struct Packer
 
 		writer.EndObject();
 
-		writer.String("rotated");
-		writer.Bool(sprite.rotated);
+        if (sprite.rotated)
+        {
+            writer.String("rotated");
+            writer.Bool(sprite.rotated);
+        }
+        
+        if (params.trim)
+        {
+            writer.String("trimmed");
+		 	writer.Bool(params.trim);
 
-		writer.String("trimmed");
-		writer.Bool(params.trim);
+			writer.String("spriteSourceSize");
+			writer.StartObject();
 
-		writer.String("spriteSourceSize");
-		writer.StartObject();
+			writer.String("x");
+			writer.Int(sprite.xoffset);
 
-		writer.String("x");
-		writer.Int(sprite.xoffset);
+			writer.String("y");
+			writer.Int(sprite.yoffset);
 
-		writer.String("y");
-		writer.Int(sprite.yoffset);
+			writer.String("w");
+			writer.Int(sprite.rotated ? sprite.height : sprite.width);
 
-		writer.String("w");
-		writer.Int(sprite.rotated ? sprite.height : sprite.width);
+			writer.String("h");
+			writer.Int(sprite.rotated ? sprite.width : sprite.height);
 
-		writer.String("h");
-		writer.Int(sprite.rotated ? sprite.width : sprite.height);
+			writer.EndObject();
 
-		writer.EndObject();
+			writer.String("sourceSize");
+			writer.StartObject();
 
-		writer.String("sourceSize");
-		writer.StartObject();
+			writer.String("w");
+			writer.Int(sprite.rotated ? sprite.real_height : sprite.real_width);
 
-		writer.String("w");
-		writer.Int(sprite.rotated ? sprite.real_height : sprite.real_width);
-
-		writer.String("h");
-		writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
-
-		writer.EndObject();
-
+			writer.String("h");
+			writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
+			
+			writer.EndObject();
+        }
+		
 		if (metadata.IsObject())
 		{
 			rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
@@ -1132,6 +1145,16 @@ struct Packer
 		}
 	}
 
+    std::string format_meta_image_name(const char *filename)
+	{
+		// Removes the extension and path, then adds .png back to the file namehub
+		std::string working_name = remove_extension(filename);
+		std::size_t last_index = working_name.find_last_of("/\\");
+		std::string name = working_name.substr(last_index + 1) + ".png";
+
+		return name;
+	}
+    
 	template<typename T>
 	void fill_meta_info(const Result &result, T &writer, const char *filename)
 	{
@@ -1141,12 +1164,8 @@ struct Packer
 		writer.String("app");
 		writer.Key("https://github.com/urraka/texpack");
 
-		// Removes the extension and path, then adds .png back to the file namehub
-		std::string working_name = remove_extension(filename);
-		std::size_t last_index = working_name.find_last_of("/\\");
-		std::string name = working_name.substr(last_index + 1) + ".png";
 		writer.String("image");
-		writer.Key(name.c_str());
+		writer.Key(format_meta_image_name(filename).c_str());
 
 		writer.String("size");
 		writer.StartObject();
