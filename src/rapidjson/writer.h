@@ -30,7 +30,7 @@
 #include <new>      // placement new
 
 #ifdef _MSC_VER
-RAPIDJSON_DIAG_PUSH
+RAPIDJSON_DIAG_PUSH* xml (Texture Atlas XML)
 RAPIDJSON_DIAG_OFF(4127) // conditional expression is constant
 #endif
 
