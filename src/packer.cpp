@@ -216,7 +216,7 @@ struct Packer
 				if ((dir_marker == std::string::npos || dir_marker < open_bracket) && (file_extension == std::string::npos || file_extension > close_bracket) && open_bracket < close_bracket)
 				{
 					std::size_t numbers_length = close_bracket - open_bracket - 1;
-					std::string numbers = name.substr(open_bracket + 1, close_bracket - open_bracket - 1);
+					std::string numbers = name.substr(open_bracket + 1, numbers_length);
 
 					// If everything is a valid number (or a hyphen)
 					if (numbers.find_first_not_of("0123456789-") == std::string::npos){
