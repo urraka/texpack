@@ -57,7 +57,7 @@ struct Result
 struct Packer
 {
     int formatting;
-    
+
 	Params params;
 
 	std::vector<char*> filenames;
@@ -194,45 +194,45 @@ struct Packer
 				addnext = false;
 			}
 		}
-        
+
 		// Cycle through all the loaded filenames and generate numbers
 		// e.g. sauce[01-03].png will generate sauce01.png sauce02.png and sauce03.png
 		for (size_t i = 0; i < filenames.size(); i++)
 		{
 			std::string name(filenames[i]);
-			
+
 			std::size_t open_bracket = name.find_last_of("[");
 			std::size_t close_bracket = name.find_last_of("]");
-			
+
 			// If there is both an open and close square bracket []
 			if (open_bracket != std::string::npos && close_bracket != std::string::npos)
 			{
 				std::size_t dir_marker = name.find_last_of("/\\");
 				std::size_t file_extension = name.find_last_of(".");
-				
+
 				// If there are no directory markings OR if there are, that the square bracket comes after all of them
 				// And if there is no extension OR if there is, that the square bracket comes before it
 				// And the brackets are in the proper order (open then closed)
-				if ((dir_marker == std::string::npos || dir_marker < open_bracket) && (dir_marker == std::string::npos || file_extension > close_bracket) && open_bracket < close_bracket)
+				if ((dir_marker == std::string::npos || dir_marker < open_bracket) && (file_extension == std::string::npos || file_extension > close_bracket) && open_bracket < close_bracket)
 				{
 					std::size_t numbers_length = close_bracket - open_bracket - 1;
 					std::string numbers = name.substr(open_bracket + 1, close_bracket - open_bracket - 1);
-					
+
 					// If everything is a valid number (or a hyphen)
 					if (numbers.find_first_not_of("0123456789-") == std::string::npos){
-						
+
 						int hyphen = numbers.find_first_of("-");
-						
+
 						// And there's one "-" (hyphen)
 						if (hyphen == (int) numbers.find_last_of("-") && hyphen != (int) std::string::npos)
 						{
 							// The minimum length of the number should be the length of the frist number given, therefore the value of hyphen
 							std::string first = numbers.substr(0, hyphen);
 							std::string second = numbers.substr(hyphen + 1, numbers_length - hyphen - 1);
-							
+
 							int first_num = std::stoi(first);
 							int second_num = std::stoi(second);
-							
+
 							if (first_num < second_num)
 							{
 								// Removes the original filename
@@ -841,7 +841,7 @@ struct Packer
                     sprintf(buf, "-%d.xml", (int)i);
                 else
                     sprintf(buf, "-%d.json", (int)i);
-                
+
 				filename += buf;
 			}
 			else
@@ -860,7 +860,7 @@ struct Packer
         {
             std::ofstream stream2;
             stream2.open(filename);
-            
+
             XMLWriter writer(stream2);
             write_xml(result, writer, filename);
         }
@@ -903,41 +903,41 @@ struct Packer
     void write_xml(const Result &result, XMLWriter writer, const char *filename)
     {
         writer.content("<!-- Created with TexPack https://github.com/urraka/texpack -->\n");
-        
+
         writer.openElt("TextureAtlas");
         writer.attr("imagePath", format_meta_image_name(filename));
         writer.attr("width", result.width);
         writer.attr("height", result.height);
-        
+
         for (size_t i = 0; i < result.sprites.size(); i++)
 		{
             const Sprite &sprite = result.sprites[i];
-            
+
             writer.openElt("SubTexture");
-            
+
             writer.attr("name", remove_extension(sprite.filename));
             writer.attr("x", sprite.x);
             writer.attr("y", sprite.y);
-            
+
             if (sprite.rotated) // By default rotated is false in xml loaders, so don't include it unless it's neccessary
                 writer.attr("rotated", "true");
-            
+
             writer.attr("width", sprite.rotated ? sprite.height : sprite.width);
             writer.attr("height", sprite.rotated ? sprite.width : sprite.height);
-            
+
             if (params.trim){
                 writer.attr("frameX", sprite.xoffset);
                 writer.attr("frameY", sprite.yoffset);
                 writer.attr("frameWidth", sprite.real_width);
                 writer.attr("frameHeight", sprite.real_height);
             }
-            
+
             writer.closeElt();
         }
-        
+
         writer.closeAll();
     }
-    
+
 	template<typename T>
 	void write_json(const Result &result, T &writer, const char *filename)
 	{
@@ -1023,7 +1023,7 @@ struct Packer
                 writer.Int(sprite.rotated ? sprite.height : sprite.width);
 				writer.String("height");
                 writer.Int(sprite.rotated ? sprite.width : sprite.height);
-                
+
 				if (params.rotate)
 				{
 					writer.String("rotated");
@@ -1063,7 +1063,7 @@ struct Packer
 			writer.EndObject();
 		}
 	}
-    
+
     std::string remove_extension(const char *filename)
 	{
 		std::string working_name = filename;
@@ -1098,7 +1098,7 @@ struct Packer
             writer.String("rotated");
             writer.Bool(sprite.rotated);
         }
-        
+
         if (params.trim)
         {
             writer.String("trimmed");
@@ -1129,10 +1129,10 @@ struct Packer
 
 			writer.String("h");
 			writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
-			
+
 			writer.EndObject();
         }
-		
+
 		if (metadata.IsObject())
 		{
 			rapidjson::Value::ConstMemberIterator it = metadata.FindMember(sprite.filename);
@@ -1154,7 +1154,7 @@ struct Packer
 
 		return name;
 	}
-    
+
 	template<typename T>
 	void fill_meta_info(const Result &result, T &writer, const char *filename)
 	{
@@ -1231,7 +1231,7 @@ int pack(std::istream &input, const Params &params)
 	packer.create_png_files(results);
 
 	packer.load_metadata();
-    
+
 	packer.create_files(results);
 
 	for (size_t i = 0; i < results.size(); i++)
