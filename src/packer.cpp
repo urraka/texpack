@@ -226,7 +226,7 @@ struct Packer
 						// And there's one "-" (hyphen)
 						if (hyphen == (int) numbers.find_last_of("-") && hyphen != (int) std::string::npos)
 						{
-							// The minimum length of the number should be the length of the frist number given, therefore the value of hyphen
+							// The minimum length of the number should be the length of the first number given, therefore the value of hyphen
 							std::string first = numbers.substr(0, hyphen);
 							std::string second = numbers.substr(hyphen + 1, numbers_length - hyphen - 1);
 
