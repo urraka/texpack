@@ -56,7 +56,7 @@ struct Result
 
 struct Packer
 {
-    int formatting;
+	int formatting;
 
 	Params params;
 
@@ -96,7 +96,7 @@ struct Packer
 			"jsonarray",
 			"jsonhash",
 			"legacy",
-            "xml"
+			"xml"
 		};
 
 		for (size_t i = 0; i < countof(modes); i++)
@@ -135,7 +135,7 @@ struct Packer
 			return false;
 		}
 
-        formatting = format_mode(params.format);
+		formatting = format_mode(params.format);
 		if (formatting == -1)
 		{
 			fputs("Invalid format mode.\n", stderr);
@@ -177,15 +177,15 @@ struct Packer
 
 		bool addnext = true;
 
-        // Cycles through the list of file names
+		// Cycles through the list of file names
 		for (size_t i = 0; i < filenamesbuf.size(); i++)
 		{
-            // If a new line
+			// If a new line
 			if (filenamesbuf[i] == '\n' || filenamesbuf[i] == '\r')
 			{
-                // clears the current line
+				// clears the current line
 				filenamesbuf[i] = '\0';
-                // Add the next, as it's the data we want
+				// Add the next, as it's the data we want
 				addnext = true;
 			}
 			else if (addnext)
@@ -836,11 +836,11 @@ struct Packer
 
 			if (results.size() > 1)
 			{
-                // XML formatting
-                if (formatting == 3)
-                    sprintf(buf, "-%d.xml", (int)i);
-                else
-                    sprintf(buf, "-%d.json", (int)i);
+				// XML formatting
+				if (formatting == 3)
+					sprintf(buf, "-%d.xml", (int)i);
+				else
+					sprintf(buf, "-%d.json", (int)i);
 
 				filename += buf;
 			}
@@ -855,88 +855,88 @@ struct Packer
 
 	void create_file(const char *filename, const Result &result)
 	{
-        // XML formatting
-        if (formatting == 3)
-        {
-            std::ofstream stream2;
-            stream2.open(filename);
+		// XML formatting
+		if (formatting == 3)
+		{
+			std::ofstream stream2;
+			stream2.open(filename);
 
-            XMLWriter writer(stream2);
-            write_xml(result, writer, filename);
-        }
-        else
-        {
-            FILE *file = fopen(filename, "wb");
+			XMLWriter writer(stream2);
+			write_xml(result, writer, filename);
+		}
+		else
+		{
+			FILE *file = fopen(filename, "wb");
 
-            if (file == 0)
-            {
-                fprintf(stderr, "Error creating file %s\n", filename);
-                return;
-            }
+			if (file == 0)
+			{
+				fprintf(stderr, "Error creating file %s\n", filename);
+				return;
+			}
 
-            using namespace rapidjson;
+			using namespace rapidjson;
 
-            char buffer[4096];
-            FileWriteStream stream(file, buffer, sizeof(buffer));
+			char buffer[4096];
+			FileWriteStream stream(file, buffer, sizeof(buffer));
 
-            // Setup JSON writer
-            if (params.pretty)
-            {
-                PrettyWriter<FileWriteStream> writer(stream);
+			// Setup JSON writer
+			if (params.pretty)
+			{
+				PrettyWriter<FileWriteStream> writer(stream);
 
-                if (params.indentation > 0)
-                    writer.SetIndent(' ', params.indentation);
-                else
-                    writer.SetIndent('\t', 1);
+				if (params.indentation > 0)
+					writer.SetIndent(' ', params.indentation);
+				else
+					writer.SetIndent('\t', 1);
 
-                write_json(result, writer, filename);
-            }
-            else
-            {
-                Writer<FileWriteStream> writer(stream);
-                write_json(result, writer, filename);
-            }
-            fclose(file);
-        }
+				write_json(result, writer, filename);
+			}
+			else
+			{
+				Writer<FileWriteStream> writer(stream);
+				write_json(result, writer, filename);
+			}
+			fclose(file);
+		}
 	}
 
-    void write_xml(const Result &result, XMLWriter writer, const char *filename)
-    {
-        writer.content("<!-- Created with TexPack https://github.com/urraka/texpack -->\n");
+	void write_xml(const Result &result, XMLWriter writer, const char *filename)
+	{
+		writer.content("<!-- Created with TexPack https://github.com/urraka/texpack -->\n");
 
-        writer.openElt("TextureAtlas");
-        writer.attr("imagePath", format_meta_image_name(filename));
-        writer.attr("width", result.width);
-        writer.attr("height", result.height);
+		writer.openElt("TextureAtlas");
+		writer.attr("imagePath", format_meta_image_name(filename));
+		writer.attr("width", result.width);
+		writer.attr("height", result.height);
 
-        for (size_t i = 0; i < result.sprites.size(); i++)
+		for (size_t i = 0; i < result.sprites.size(); i++)
 		{
-            const Sprite &sprite = result.sprites[i];
+			const Sprite &sprite = result.sprites[i];
 
-            writer.openElt("SubTexture");
+			writer.openElt("SubTexture");
 
-            writer.attr("name", remove_extension(sprite.filename));
-            writer.attr("x", sprite.x);
-            writer.attr("y", sprite.y);
+			writer.attr("name", remove_extension(sprite.filename));
+			writer.attr("x", sprite.x);
+			writer.attr("y", sprite.y);
 
-            if (sprite.rotated) // By default rotated is false in xml loaders, so don't include it unless it's neccessary
-                writer.attr("rotated", "true");
+			if (sprite.rotated) // By default rotated is false in xml loaders, so don't include it unless it's neccessary
+				writer.attr("rotated", "true");
 
-            writer.attr("width", sprite.rotated ? sprite.height : sprite.width);
-            writer.attr("height", sprite.rotated ? sprite.width : sprite.height);
+			writer.attr("width", sprite.rotated ? sprite.height : sprite.width);
+			writer.attr("height", sprite.rotated ? sprite.width : sprite.height);
 
-            if (params.trim){
-                writer.attr("frameX", sprite.xoffset);
-                writer.attr("frameY", sprite.yoffset);
-                writer.attr("frameWidth", sprite.real_width);
-                writer.attr("frameHeight", sprite.real_height);
-            }
+			if (params.trim){
+				writer.attr("frameX", sprite.xoffset);
+				writer.attr("frameY", sprite.yoffset);
+				writer.attr("frameWidth", sprite.real_width);
+				writer.attr("frameHeight", sprite.real_height);
+			}
 
-            writer.closeElt();
-        }
+			writer.closeElt();
+		}
 
-        writer.closeAll();
-    }
+		writer.closeAll();
+	}
 
 	template<typename T>
 	void write_json(const Result &result, T &writer, const char *filename)
@@ -944,7 +944,7 @@ struct Packer
 		// 0 = jsonarray
 		// 1 = jsonhash
 		// 2 = legacy
-        // 3 = xml
+		// 3 = xml
 
 		if (formatting == 0)
 		{
@@ -1019,10 +1019,10 @@ struct Packer
 				writer.String("y");
 				writer.Int(sprite.y);
 
-                writer.String("width");
-                writer.Int(sprite.rotated ? sprite.height : sprite.width);
+				writer.String("width");
+				writer.Int(sprite.rotated ? sprite.height : sprite.width);
 				writer.String("height");
-                writer.Int(sprite.rotated ? sprite.width : sprite.height);
+				writer.Int(sprite.rotated ? sprite.width : sprite.height);
 
 				if (params.rotate)
 				{
@@ -1064,7 +1064,7 @@ struct Packer
 		}
 	}
 
-    std::string remove_extension(const char *filename)
+	std::string remove_extension(const char *filename)
 	{
 		std::string working_name = filename;
 		std::size_t last_index = working_name.find_last_of(".");
@@ -1093,16 +1093,16 @@ struct Packer
 
 		writer.EndObject();
 
-        if (sprite.rotated)
-        {
-            writer.String("rotated");
-            writer.Bool(sprite.rotated);
-        }
+		if (sprite.rotated)
+		{
+			writer.String("rotated");
+			writer.Bool(sprite.rotated);
+		}
 
-        if (params.trim)
-        {
-            writer.String("trimmed");
-		 	writer.Bool(params.trim);
+		if (params.trim)
+		{
+			writer.String("trimmed");
+			writer.Bool(params.trim);
 
 			writer.String("spriteSourceSize");
 			writer.StartObject();
@@ -1131,7 +1131,7 @@ struct Packer
 			writer.Int(sprite.rotated ? sprite.real_width : sprite.real_height);
 
 			writer.EndObject();
-        }
+		}
 
 		if (metadata.IsObject())
 		{
@@ -1145,7 +1145,7 @@ struct Packer
 		}
 	}
 
-    std::string format_meta_image_name(const char *filename)
+	std::string format_meta_image_name(const char *filename)
 	{
 		// Removes the extension and path, then adds .png back to the file namehub
 		std::string working_name = remove_extension(filename);
