@@ -1003,6 +1003,17 @@ struct Packer
 			writer.String("height");
 			writer.Int(result.height);
 
+			if (metadata.IsObject())
+			{
+				rapidjson::Value::ConstMemberIterator it = metadata.FindMember(".global");
+
+				if (it != metadata.MemberEnd() && it->value.IsObject())
+				{
+					writer.String("meta");
+					it->value.Accept(writer);
+				}
+			}
+
 			writer.String("sprites");
 			writer.StartObject();
 
@@ -1177,6 +1188,26 @@ struct Packer
 		writer.Int(result.height);
 
 		writer.EndObject();
+
+		if (metadata.IsObject())
+		{
+			rapidjson::Value::ConstMemberIterator it = metadata.FindMember(".global");
+
+			if (it != metadata.MemberEnd() && it->value.IsObject())
+			{
+				rapidjson::Value::ConstMemberIterator end = it->value.MemberEnd();
+
+				it = it->value.MemberBegin();
+
+				while (it != end)
+				{
+					it->name.Accept(writer);
+					it->value.Accept(writer);
+					++it;
+				}
+			}
+		}
+
 		writer.EndObject();
 	}
 };

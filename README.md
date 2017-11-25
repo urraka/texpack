@@ -43,12 +43,14 @@ Options:
 (*) The format of the metadata file should be as follows:
 
     {
+      ".global": {"param": "value", ...},
       "someimage.png":    {"param1": "some-value", "param2": 0, ...},
       "anotherimage.png": "not necessarily an object",
       ...
     }
 
-    Each file name should match one in the <input-file> list.
+    Each file name should match one in the <input-file> list. The ".global" file
+    name is used for global metadata.
 ```
 
 **Input:**
@@ -68,7 +70,7 @@ assets
 │       │   lightspeed.png
 │       │   glare.png
 │       │   ...
-│   
+│
 └───planets
     │   jupiter.png
 ```
