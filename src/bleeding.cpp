@@ -43,7 +43,7 @@ void bleed_apply(uint8_t *image, int width, int height)
 				{
 					size_t index = j + 4 * (s + t * width);
 
-					if (image[index + 3] != 0)
+					if (image[index] != 0)
 					{
 						isLoose = false;
 						break;
