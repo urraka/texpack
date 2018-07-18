@@ -1,4 +1,4 @@
-#include "packer.h"
+#include "texpacker.h"
 #include "bleeding.h"
 #include "png/png.h"
 #include "rbp/MaxRects.h"

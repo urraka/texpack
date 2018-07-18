@@ -1,4 +1,4 @@
-#include "packer.h"
+#include "texpacker.h"
 #include "help.h"
 
 #include <cstdio>
