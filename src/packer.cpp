@@ -1239,25 +1239,10 @@ utf8_to_windows_string(const char* input, WCHAR* output, size_t output_char_capa
     return result;
 }
 
-static bool 
-directory_exists(const char* directory_path)
-{
-  wchar_t directory_path_win[MAX_PATH];
-  utf8_to_windows_string(directory_path, directory_path_win, MAX_PATH);
-
-  DWORD attributes = GetFileAttributesW(directory_path_win);
-  if (attributes & FILE_ATTRIBUTE_DIRECTORY)
-  {
-    return true;
-  }
-
-  return false;
-}
-
 /// This expects a UTF-8 encoded path that is closed with a file separator
 /// Original code source (https://stackoverflow.com/a/16719260)
 static bool
-directory_create_recursive(const char* rootpath)
+create_dir(const char* rootpath)
 {
     wchar_t rootpath_win[MAX_PATH];
     utf8_to_windows_string(rootpath, rootpath_win, MAX_PATH);
@@ -1287,6 +1272,23 @@ directory_create_recursive(const char* rootpath)
 
     return last_creation_sucess;
 }
+
+static char* dirname(char* path)
+{
+    // NOTE: This should work with the above `create_dir` function
+    size_t length = strlen(path);
+    for (int index = (int)length; index >= 0; index--)
+    {
+        if ((path[index] == '/') || (path[index] == '\\'))
+        {
+            path[index] = '\\';
+            path[index+1] = '\0';
+            break;;
+        }
+    }
+    return path;
+}
+
 
 
 #else
@@ -1320,19 +1322,11 @@ int pack(std::istream &input, const Params &params)
 	if (!packer.validate_params())
 		return 1;
 
-#if defined(_MSC_VER)
-	if (!directory_create_recursive(params.output))
-	{
-		fputs("Failed to create directory.\n", stderr);
-		return 1;
-	}
-#else
 	if (!create_dir(dirname(c_string(params.output))))
 	{
 		fputs("Failed to create directory.\n", stderr);
 		return 1;
 	}
-#endif
 
 	packer.load_file_list(input);
 
