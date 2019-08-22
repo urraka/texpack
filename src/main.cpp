@@ -1,10 +1,10 @@
 #include "packer.h"
 #include "help.h"
+#include "getopt.h"
 
 #include <cstdio>
 #include <iostream>
 #include <fstream>
-#include <getopt.h>
 
 void print_help()
 {

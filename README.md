@@ -272,3 +272,32 @@ export CFLAGS=-I`pwd`/ext/include
 export LDFLAGS=-L`pwd`/ext/lib
 make
 ```
+
+**Building on Windows via CMake and vcpkg:**
+
+```bash
+# install vcpkg from an administrator console
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+bootstrap-vcpkg.bat
+vcpkg integrate install 
+
+# install dependencies
+vcpkg install libpng --triplet x64-windows
+vcpkg install zlib --triplet x64-windows
+# or for static linking
+vcpkg install libpng:x64-windows-static
+vcpkg install zlib:x64-windows-static
+
+# generate project and compile
+git clone https://github.com/kerskuchen/texpack.git
+cd texpack
+mkdir solution
+cd solution
+cmake .. -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="D:/UserLib/vcpkg/scripts/buildsystems/vcpkg.cmake"
+# or for static linking
+cmake .. -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="D:/UserLib/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
+
+# Then we can open the solution and build it or run the following in a developer console:
+msbuild texpack.vcxproj /nologo /p:configuration=Release /p:platform=x64 /p:OutDir=..\bin\
+```

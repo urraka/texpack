@@ -10,6 +10,7 @@
 
 #include "sebclaeys_xml/XMLWriter.hh"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <cstring>
@@ -18,13 +19,16 @@
 #include <cmath>
 #include <cstdio>
 #include <stdint.h>
-#include <libgen.h>
 #include <sys/stat.h>
+
+#if !defined(_MSC_VER)
+#include <libgen.h>
 #include <unistd.h>
+#endif
 
 #define countof(x) (sizeof(x) / sizeof(x[0]))
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_MSC_VER)
 #define mkdir(a,b) mkdir(a)
 #endif
 
@@ -1220,6 +1224,75 @@ struct c_string
 	operator char*&() { return buffer; }
 };
 
+
+#if defined(_MSC_VER)
+#include <Windows.h>
+
+/// IMPORTANT: The output buffer must be generously sized.
+/// Returns number of wide-characters written or 0 on error
+static inline size_t
+utf8_to_windows_string(const char* input, WCHAR* output, size_t output_char_capacity)
+{
+    size_t result = (size_t)
+      MultiByteToWideChar(CP_UTF8, 0, input, -1, output, (int)output_char_capacity);
+    assert(result > 0);
+    return result;
+}
+
+/// This expects a UTF-8 encoded path that is closed with a file separator
+/// Original code source (https://stackoverflow.com/a/16719260)
+static bool
+create_dir(const char* rootpath)
+{
+    wchar_t rootpath_win[MAX_PATH];
+    utf8_to_windows_string(rootpath, rootpath_win, MAX_PATH);
+
+    wchar_t folder[MAX_PATH];
+    ZeroMemory(folder, MAX_PATH * sizeof(wchar_t));
+
+    bool last_creation_sucess = true;
+    wchar_t* end = wcschr(rootpath_win, L'\\');
+    while (end != NULL)
+    {
+        wcsncpy(folder, rootpath_win, end - rootpath_win + 1);
+        if (CreateDirectoryW(folder, NULL))
+        {
+            last_creation_sucess = true;
+        }
+        else
+        {
+            DWORD err = GetLastError();
+            if (err != ERROR_ALREADY_EXISTS)
+            {
+                last_creation_sucess = false;
+            }
+        }
+        end = wcschr(++end, L'\\');
+    }
+
+    return last_creation_sucess;
+}
+
+static char* dirname(char* path)
+{
+    // NOTE: This should work with the above `create_dir` function
+    size_t length = strlen(path);
+    for (int index = (int)length; index >= 0; index--)
+    {
+        if ((path[index] == '/') || (path[index] == '\\'))
+        {
+            path[index] = '\\';
+            path[index+1] = '\0';
+            break;;
+        }
+    }
+    return path;
+}
+
+
+
+#else
+
 static bool is_dir(const char *path)
 {
 	struct stat sb;
@@ -1238,6 +1311,9 @@ static bool create_dir(const char *path)
 
 	return true;
 }
+
+#endif
+
 
 int pack(std::istream &input, const Params &params)
 {
