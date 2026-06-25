@@ -280,24 +280,32 @@ make
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg
 bootstrap-vcpkg.bat
-vcpkg integrate install 
+vcpkg integrate install
+# Note the response output like
+# CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=<your_local_path>/vcpkg/scripts/buildsystems/vcpkg.cmake"
+# you will need it later
 
 # install dependencies
 vcpkg install libpng --triplet x64-windows
-vcpkg install zlib --triplet x64-windows
+# zlib is a dependency of libpng so it's installed automatically
+# vcpkg install zlib --triplet x64-windows
 # or for static linking
 vcpkg install libpng:x64-windows-static
-vcpkg install zlib:x64-windows-static
+# zlib is a dependency of libpng so it's installed automatically
+# vcpkg install zlib:x64-windows-static
 
 # generate project and compile
-git clone https://github.com/kerskuchen/texpack.git
+git clone https://github.com/urraka/texpack.git
 cd texpack
 mkdir solution
 cd solution
-cmake .. -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="D:/UserLib/vcpkg/scripts/buildsystems/vcpkg.cmake"
+cmake .. -G "Visual Studio 18 2026" -A x64 -DCMAKE_TOOLCHAIN_FILE=<your_local_path>/vcpkg/scripts/buildsystems/vcpkg.cmake
 # or for static linking
-cmake .. -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="D:/UserLib/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
+cmake .. -G "Visual Studio 18 2026" -A x64 -DCMAKE_TOOLCHAIN_FILE=<your_local_path>/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static
 
 # Then we can open the solution and build it or run the following in a developer console:
-msbuild texpack.vcxproj /nologo /p:configuration=Release /p:platform=x64 /p:OutDir=..\bin\
+msbuild texpack.slnx /nologo /p:configuration=Release
+# the binary will be in Release directory
 ```
+
+For information about **developer console** [see here](https://learn.microsoft.com/en-us/visualstudio/ide/reference/command-prompt-powershell?view=visualstudio).

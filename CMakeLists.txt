@@ -1,14 +1,16 @@
-cmake_minimum_required(VERSION 3.0)
-project(texpack)
+cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+project(texpack LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 find_package(PNG REQUIRED)
-include_directories(${PNG_INCLUDE_DIRS})
-
 find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
 
 set(SOURCES
     src/main.cpp
@@ -24,4 +26,8 @@ set(SOURCES
 )
 
 add_executable(texpack ${SOURCES})
-target_link_libraries(texpack  PNG::PNG ZLIB::ZLIB)
+
+target_link_libraries(texpack PRIVATE
+    PNG::PNG
+    ZLIB::ZLIB
+)
