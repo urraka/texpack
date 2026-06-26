@@ -1,6 +1,10 @@
 #include "packer.h"
 #include "help.h"
+#if !defined(_MSC_VER)
+#include <getopt.h>
+#else
 #include "getopt.h"
+#endif
 
 #include <cstdio>
 #include <iostream>
